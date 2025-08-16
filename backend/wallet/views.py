@@ -101,17 +101,21 @@ def transfer_money(request, wallet_id):
     Transfer money from one wallet to another
     """
     sender_wallet = get_object_or_404(Wallet, id=wallet_id, owner=request.user, is_active=True)
+    print("Sender wallet is ", sender_wallet)
     serializer = TransferSerializer(data=request.data)
 
     if serializer.is_valid():
+        print("Serializer is valid!!!")
         recipient_wallet_id = serializer.validated_data['recipient_wallet_id']
         amount = serializer.validated_data['amount']
         description = serializer.validated_data.get('description', 'Peer-to-peer transfer')
 
         recipient_wallet = get_object_or_404(Wallet, id=recipient_wallet_id, is_active=True)
+        print("Recipient wallet is ", recipient_wallet)
 
         # Check if sender has sufficient balance
         if not sender_wallet.can_debit(amount):
+            print("Insufficient balance")
             return Response(
                 {"error": "Insufficient balance"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -119,6 +123,7 @@ def transfer_money(request, wallet_id):
 
         with transaction.atomic():
             # Create outgoing transaction for sender
+            print("Creating sender transaction")
             sender_txn = Transaction.objects.create(
                 wallet=sender_wallet,
                 transaction_type='TRANSFER_OUT',
