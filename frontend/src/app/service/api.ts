@@ -2,6 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { environment } from '../../environments/environment.development';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Wallet } from '../models/wallet';
+import { PiggyBank } from '../piggy-bank/piggy-bank';
 
 @Injectable({
   providedIn: 'root'
@@ -19,57 +21,57 @@ export class Api {
     return this.http.get(`${this.api_Url}auth/profile/`);
   }
   //Wallet Management
-  CreateWallet(wallet: any): Observable<any> {
+  CreateWallet(wallet: Wallet): Observable<any> {
     return this.http.post(`${this.api_Url}wallets/`, wallet);
   }
   AddFundsToWallet(walletId: number, amount: number): Observable<any> {
     return this.http.post(`${this.api_Url}wallets/${walletId}/deposit/`, { amount });
   }
-  TransferFunds(fromWalletId: number, toWalletId: number, amount: number): Observable<any> {
+  TransferFunds(fromWalletId: string, toWalletId: string, amount: string): Observable<any> {
     return this.http.post(`${this.api_Url}wallets/${fromWalletId}/transfer/`, { toWalletId, amount });
   }
   GetWallets(): Observable<any> {
     return this.http.get(`${this.api_Url}wallets/`);
   }
-  GetWalletById(walletId: number): Observable<any> {
+  GetWalletById(walletId: string): Observable<any> {
     return this.http.get(`${this.api_Url}wallets/${walletId}/`);
   }
-  DeleteWallet(walletId: number): Observable<any> {
+  DeleteWallet(walletId: string): Observable<any> {
     return this.http.delete(`${this.api_Url}wallets/${walletId}/`);
   }
-  UpdateWallet(walletId: number, walletData: any): Observable<any> {
+  UpdateWallet(walletId: string, walletData: Wallet): Observable<any> {
     return this.http.put(`${this.api_Url}wallets/${walletId}/`, walletData);
   }
-  GetTransactions(walletId: number): Observable<any> {
+  GetTransactions(walletId: string): Observable<any> {
     return this.http.get(`${this.api_Url}wallets/${walletId}/transactions/`);
   }
 
   //Piggy Bank Management
-  CreatePiggyBank(piggyBank: any): Observable<any> {
+  CreatePiggyBank(piggyBank: PiggyBank): Observable<any> {
     return this.http.post(`${this.api_Url}piggybanks/`, piggyBank);
   }
   GetPiggyBanks(): Observable<any> {
     return this.http.get(`${this.api_Url}piggybanks/`);
   }
-  GetPiggyBankById(piggyBankId: number): Observable<any> {
+  GetPiggyBankById(piggyBankId: string): Observable<any> {
     return this.http.get(`${this.api_Url}piggybanks/${piggyBankId}/`);
   }
-  UpdatePiggyBank(piggyBankId: number, piggyBankData: any): Observable<any> {
+  UpdatePiggyBank(piggyBankId: string, piggyBankData: PiggyBank): Observable<any> {
     return this.http.put(`${this.api_Url}piggybanks/${piggyBankId}/`, piggyBankData);
   }
-  DeletePiggyBank(piggyBankId: number): Observable<any> {
+  DeletePiggyBank(piggyBankId: string): Observable<any> {
     return this.http.delete(`${this.api_Url}piggybanks/${piggyBankId}/`);
   }
-  AddMemberToPiggyBank(piggyBankId: number, memberId: number): Observable<any> {
+  AddMemberToPiggyBank(piggyBankId: string, memberId: string): Observable<any> {
     return this.http.post(`${this.api_Url}piggybanks/${piggyBankId}/add-members/`, { memberId });
   }
-  GetMembersInPiggyBank(piggyBankId: number): Observable<any> {
+  GetMembersInPiggyBank(piggyBankId: string): Observable<any> {
     return this.http.get(`${this.api_Url}piggybanks/${piggyBankId}/members/`);
   }
-  GetContributionsInPiggyBank(piggyBankId: number): Observable<any> {
+  GetContributionsInPiggyBank(piggyBankId: string): Observable<any> {
     return this.http.get(`${this.api_Url}piggybanks/${piggyBankId}/contributions/`);
   }
-  ContributeToPiggyBank(piggyBankId: number, amount: number): Observable<any> {
+  ContributeToPiggyBank(piggyBankId: string, amount: string): Observable<any> {
     return this.http.post(`${this.api_Url}piggybanks/${piggyBankId}/contribute/`, { amount });
   }
   //Payment Management
