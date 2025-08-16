@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, DollarSign, User, IdCard } from 'lucide-react';
-import { walletAPI } from '../../services/api';
-import { Wallet, WalletTransfer } from '../../types';
-import { formatCurrency, validateAmount } from '../../utils';
-import { useToast } from '../../contexts/ToastContext';
-import LoadingSpinner from '../LoadingSpinner';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Send, DollarSign, User, IdCard } from "lucide-react";
+import { walletAPI } from "../../services/api";
+import { Wallet, WalletTransfer } from "../../types";
+import { formatCurrency, validateAmount } from "../../utils";
+import { useToast } from "../../contexts/ToastContext";
+import LoadingSpinner from "../LoadingSpinner";
 
 interface TransferModalProps {
   wallet: Wallet;
@@ -20,78 +20,105 @@ const TransferModal: React.FC<TransferModalProps> = ({
 }) => {
   const { showSuccess, showError } = useToast();
   const [formData, setFormData] = useState<WalletTransfer>({
-    recipient_wallet_id: '',
-    amount: '',
-    description: '',
+    recipient_wallet_id: "",
+    amount: "",
+    description: "",
   });
   const [availableWallets, setAvailableWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingWallets, setLoadingWallets] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadAvailableWallets();
-  }, []);
-
-  const loadAvailableWallets = async () => {
-    try {
-      const response = await walletAPI.getWallets();
-      // Filter out the current wallet
-      const otherWallets = response.data.filter(w => w.id !== wallet.id);
-      setAvailableWallets(otherWallets);
-    } catch (error) {
-      console.error('Error loading wallets:', error);
-    } finally {
-      setLoadingWallets(false);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value as string,
     }));
-    if (error) setError('');
+    console.log(formData);
+    if (error) setError("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateAmount(formData.amount)) {
-      setError('Please enter a valid amount greater than 0');
+      setError("Please enter a valid amount greater than 0");
       return;
     }
 
     if (parseFloat(formData.amount) > parseFloat(wallet.balance)) {
-      setError('Insufficient balance for this transfer');
+      setError("Insufficient balance for this transfer");
       return;
     }
 
     if (!formData.recipient_wallet_id) {
-      setError('Please select a recipient wallet');
+      setError("Please select a recipient wallet");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      await walletAPI.transfer(wallet.id, formData);
-      const recipientWallet = availableWallets.find(w => w.id === formData.recipient_wallet_id);
-      showSuccess('Money Sent!', `${formatCurrency(formData.amount)} has been sent to ${recipientWallet?.name || 'recipient'}.`);
+      console.log(formData);
+      setLoading(true);
+      console.log("Tranfering Money...");
+
+      const [walletsResponse] = await Promise.all([walletAPI.transfer(wallet.id, formData)]);
+
+      console.log("Wallets response:", walletsResponse.data);
+
+      const recipientWallet = availableWallets.find(
+        (w) => w.id === formData.recipient_wallet_id
+      );
+      showSuccess(
+        "Money Sent!",
+        `${formatCurrency(formData.amount)} has been sent to ${
+          recipientWallet?.name || "recipient"
+        }.`
+      );
       onSuccess();
       onClose();
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to transfer money';
-      setError(errorMessage);
-      showError('Transfer Failed', errorMessage);
+    } catch (error) {
+      console.error("Error loading transfer data:", error);
+      showError(
+        "Failed to Load Data",
+        "Unable to Transfer money. Please try refreshing the page."
+      );
     } finally {
       setLoading(false);
     }
+    // try {
+    //   await walletAPI.transfer(wallet.id, formData);
+    //   const recipientWallet = availableWallets.find(
+    //     (w) => w.id === formData.recipient_wallet_id
+    //   );
+    //   showSuccess(
+    //     "Money Sent!",
+    //     `${formatCurrency(formData.amount)} has been sent to ${
+    //       recipientWallet?.name || "recipient"
+    //     }.`
+    //   );
+    //   onSuccess();
+    //   onClose();
+    // } catch (err: any) {
+    //   const errorMessage =
+    //     err.response?.data?.message || "Failed to transfer money";
+    //   setError(errorMessage);
+    //   showError("Transfer Failed", errorMessage);
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
-  const selectedRecipient = availableWallets.find(w => w.id === formData.recipient_wallet_id);
+  const selectedRecipient = availableWallets.find(
+    (w) => w.id === formData.recipient_wallet_id
+  );
 
   return (
     <AnimatePresence>
@@ -100,7 +127,7 @@ const TransferModal: React.FC<TransferModalProps> = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-white rounded-xl shadow-xl w-full max-w-md"
+          className="bg-white rounded-xl shadow-xl w-full h-full max-w-md overflow-auto"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -109,7 +136,9 @@ const TransferModal: React.FC<TransferModalProps> = ({
                 <Send className="w-5 h-5 text-primary-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Transfer Money</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Transfer Money
+                </h2>
                 <p className="text-sm text-gray-500">From {wallet.name}</p>
               </div>
             </div>
@@ -142,16 +171,19 @@ const TransferModal: React.FC<TransferModalProps> = ({
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-             <div>
-                <label htmlFor="ID" className="block text-sm font-medium text-gray-700 mb-2">
+              <div>
+                <label
+                  htmlFor="rid"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Receipient ID
                 </label>
                 <div className="relative">
                   <IdCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    id="ID"
-                    name="ID"
+                    id="rid"
+                    name="recipient_wallet_id" // <-- change here
                     value={formData.recipient_wallet_id}
                     onChange={handleChange}
                     className="input-field pl-10"
@@ -171,15 +203,22 @@ const TransferModal: React.FC<TransferModalProps> = ({
                       <User className="w-4 h-4 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-blue-900">{selectedRecipient.name}</p>
-                      <p className="text-sm text-blue-700">Owner: {selectedRecipient.owner.username}</p>
+                      <p className="font-medium text-blue-900">
+                        {selectedRecipient.name}
+                      </p>
+                      <p className="text-sm text-blue-700">
+                        Owner: {selectedRecipient.owner.username}
+                      </p>
                     </div>
                   </div>
                 </motion.div>
               )}
 
               <div>
-                <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="amount"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Amount
                 </label>
                 <div className="relative">
@@ -204,7 +243,10 @@ const TransferModal: React.FC<TransferModalProps> = ({
               </div>
 
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Description (Optional)
                 </label>
                 <textarea
@@ -219,13 +261,15 @@ const TransferModal: React.FC<TransferModalProps> = ({
               </div>
 
               {/* Preview */}
-              {formData.amount && validateAmount(formData.amount) && selectedRecipient && (
+              {formData.amount && validateAmount(formData.amount) && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-primary-50 border border-primary-200 rounded-lg p-4"
                 >
-                  <p className="text-sm text-primary-700 mb-2">Transfer Preview</p>
+                  <p className="text-sm text-primary-700 mb-2">
+                    Transfer Preview
+                  </p>
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-primary-600">Amount:</span>
@@ -234,10 +278,13 @@ const TransferModal: React.FC<TransferModalProps> = ({
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-primary-600">Remaining Balance:</span>
+                      <span className="text-sm text-primary-600">
+                        Remaining Balance:
+                      </span>
                       <span className="font-semibold text-primary-700">
                         {formatCurrency(
-                          parseFloat(wallet.balance) - parseFloat(formData.amount)
+                          parseFloat(wallet.balance) -
+                            parseFloat(formData.amount)
                         )}
                       </span>
                     </div>
@@ -259,7 +306,11 @@ const TransferModal: React.FC<TransferModalProps> = ({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  disabled={loading || !validateAmount(formData.amount) || !formData.recipient_wallet_id || availableWallets.length === 0}
+                  disabled={
+                    loading ||
+                    !validateAmount(formData.amount) ||
+                    !formData.recipient_wallet_id
+                  }
                   className="flex-1 btn-primary flex items-center justify-center space-x-2"
                 >
                   {loading ? (
@@ -267,7 +318,10 @@ const TransferModal: React.FC<TransferModalProps> = ({
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      <span>Transfer {formData.amount && formatCurrency(formData.amount)}</span>
+                      <span>
+                        Transfer{" "}
+                        {formData.amount && formatCurrency(formData.amount)}
+                      </span>
                     </>
                   )}
                 </motion.button>
