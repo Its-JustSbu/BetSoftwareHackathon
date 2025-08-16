@@ -183,7 +183,7 @@
                 <div class="flex items-center space-x-4">
                   <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                     <span class="text-blue-600 font-medium text-sm">
-                      {{ participant.name.charAt(0).toUpperCase() }}
+                      {{ (participant.name || participant.userName || 'U').charAt(0).toUpperCase() }}
                     </span>
                   </div>
                   <div>
@@ -206,11 +206,11 @@
                     
                     @if (canParticipantPay(participant)) {
                       <button
-                        (click)="payBillShare(participant.id)"
-                        [disabled]="paying() === participant.id"
+                        (click)="payBillShare(participant.id || participant.userId)"
+                        [disabled]="paying() === (participant.id || participant.userId)"
                         class="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                       >
-                        @if (paying() === participant.id) {
+                        @if (paying() === (participant.id || participant.userId)) {
                           <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                           <span>Paying...</span>
                         } @else {
@@ -236,11 +236,11 @@
               </div>
               @if (myParticipant()!.status !== 'paid') {
                 <button
-                  (click)="payBillShare(myParticipant()!.id)"
-                  [disabled]="paying() === myParticipant()!.id"
+                  (click)="payBillShare(myParticipant()?.id || myParticipant()?.userId || '')"
+                  [disabled]="paying() === (myParticipant()?.id || myParticipant()?.userId || '')"
                   class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
-                  @if (paying() === myParticipant()!.id) {
+                  @if (paying() === (myParticipant()?.id || myParticipant()?.userId || '')) {
                     <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     <span>Processing Payment...</span>
                   } @else {

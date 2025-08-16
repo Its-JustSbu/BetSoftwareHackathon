@@ -12,7 +12,7 @@ import { ApiService } from '../service/api';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './bill-detail.component.html',
-  styleUrl: './bill-detail.component.css'
+  styleUrls: ['./bill-detail.component.css']
 })
 export class BillDetailComponent implements OnInit, OnDestroy {
   private readonly apiService = inject(ApiService);

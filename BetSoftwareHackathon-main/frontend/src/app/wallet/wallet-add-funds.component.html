@@ -187,7 +187,7 @@
                 <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
                   <span class="text-sm font-medium text-gray-700">New Balance:</span>
                   <span class="text-lg font-bold text-green-600">
-                    {{ formatCurrency(wallet()!.balance + parseFloat(addFundsForm.get('amount')?.value || '0'), wallet()!.currency) }}
+                    {{ formatCurrency(wallet()!.balance + parseFloatValue(addFundsForm.get('amount')?.value || '0'), wallet()!.currency) }}
                   </span>
                 </div>
               }

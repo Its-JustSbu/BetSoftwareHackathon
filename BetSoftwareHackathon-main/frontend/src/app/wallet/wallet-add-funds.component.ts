@@ -12,7 +12,7 @@ import { ApiService } from '../service/api';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule],
   templateUrl: './wallet-add-funds.component.html',
-  styleUrl: './wallet-add-funds.component.css'
+  styleUrls: ['./wallet-add-funds.component.css']
 })
 export class WalletAddFundsComponent implements OnInit, OnDestroy {
   private readonly apiService = inject(ApiService);
@@ -82,6 +82,11 @@ export class WalletAddFundsComponent implements OnInit, OnDestroy {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  // Helper method for parseFloat in templates
+  parseFloatValue(value: any): number {
+    return parseFloat(value) || 0;
   }
 
   // Load payment methods

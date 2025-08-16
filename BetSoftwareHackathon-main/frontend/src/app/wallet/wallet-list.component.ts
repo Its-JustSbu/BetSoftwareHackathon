@@ -12,7 +12,7 @@ import { ApiService } from '../service/api';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './wallet-list.component.html',
-  styleUrl: './wallet-list.component.css'
+  styleUrls: ['./wallet-list.component.css']
 })
 export class WalletListComponent implements OnInit, OnDestroy {
   private readonly apiService = inject(ApiService);
@@ -92,6 +92,16 @@ export class WalletListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/wallet', 'create']);
   }
 
+  // Refresh wallets
+  refreshWallets(): void {
+    this.loadWallets();
+  }
+
+  // Helper method for wallet status in templates
+  getWalletStatusSafe(wallet: any) {
+    return this.getWalletStatus(wallet);
+  }
+
   // Get wallet type icon
   getWalletTypeIcon(type: string): string {
     const icons: Record<string, string> = {
@@ -136,11 +146,6 @@ export class WalletListComponent implements OnInit, OnDestroy {
       return { text: 'Empty', color: 'text-yellow-600 bg-yellow-100' };
     }
     return { text: 'Active', color: 'text-green-600 bg-green-100' };
-  }
-
-  // Refresh wallets
-  refreshWallets(): void {
-    this.loadWallets();
   }
 
   // Handle error retry

@@ -12,7 +12,7 @@ import { ApiService } from '../service/api';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './wallet-transactions.component.html',
-  styleUrl: './wallet-transactions.component.css'
+  styleUrls: ['./wallet-transactions.component.css']
 })
 export class WalletTransactionsComponent implements OnInit, OnDestroy {
   private readonly apiService = inject(ApiService);
@@ -81,6 +81,23 @@ export class WalletTransactionsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     // Cleanup if needed
+  }
+
+  // Helper methods for dateRange in templates
+  getDateRangeStartDate(): Date | undefined {
+    return this.dateRange().startDate;
+  }
+
+  setDateRangeStartDate(date: Date | undefined): void {
+    this.dateRange.update(range => ({ ...range, startDate: date }));
+  }
+
+  getDateRangeEndDate(): Date | undefined {
+    return this.dateRange().endDate;
+  }
+
+  setDateRangeEndDate(date: Date | undefined): void {
+    this.dateRange.update(range => ({ ...range, endDate: date }));
   }
 
   // Load wallet details

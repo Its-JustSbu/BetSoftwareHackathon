@@ -12,7 +12,7 @@ import { ApiService } from '../service/api';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule],
   templateUrl: './bill-create.component.html',
-  styleUrl: './bill-create.component.css'
+  styleUrls: ['./bill-create.component.css']
 })
 export class BillCreateComponent implements OnInit, OnDestroy {
   private readonly apiService = inject(ApiService);
@@ -186,9 +186,8 @@ export class BillCreateComponent implements OnInit, OnDestroy {
 
       const formValue = this.billForm.value;
       
-      const participants: CreateBillParticipant[] = this.participantsArray.controls.map(control => ({
-        email: control.get('email')?.value,
-        name: control.get('name')?.value,
+      const participants: CreateBillParticipant[] = this.participantsArray.controls.map((control, index) => ({
+        userId: `demo-user-${index + 1}`, // placeholder for demo
         amount: parseFloat(control.get('amount')?.value),
         percentage: parseFloat(control.get('percentage')?.value)
       }));
@@ -211,7 +210,7 @@ export class BillCreateComponent implements OnInit, OnDestroy {
         
         // Redirect to bill details after 2 seconds
         setTimeout(() => {
-          this.router.navigate(['/bills', response.data.id]);
+          this.router.navigate(['/bills', response.data?.id || 'demo-bill-id']);
         }, 2000);
       } else {
         this.error.set('Failed to create bill. Please try again.');

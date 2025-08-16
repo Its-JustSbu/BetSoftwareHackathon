@@ -1,0 +1,519 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center space-x-4">
+        <button
+          (click)="goBack()"
+          class="text-gray-600 hover:text-gray-900 transition-colors duration-200"
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-900 mt-2">Settings</h1>
+      <p class="mt-2 text-gray-600">Customize your SplitPay experience and manage your account</p>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <span class="ml-3 text-gray-600">Loading settings...</span>
+      </div>
+    }
+
+    <!-- Error Alert -->
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <span class="text-red-500 text-xl mr-3">⚠️</span>
+            <div>
+              <h3 class="text-red-800 font-medium">Error</h3>
+              <p class="text-red-600 mt-1">{{ error() }}</p>
+            </div>
+          </div>
+          <button
+            (click)="clearError()"
+            class="text-red-400 hover:text-red-600"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Success Alert -->
+    @if (success()) {
+      <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <span class="text-green-500 text-xl mr-3">✅</span>
+            <div>
+              <h3 class="text-green-800 font-medium">Success!</h3>
+              <p class="text-green-600 mt-1">{{ success() }}</p>
+            </div>
+          </div>
+          <button
+            (click)="clearSuccess()"
+            class="text-green-400 hover:text-green-600"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Settings Content -->
+    @if (!loading()) {
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Left Sidebar - Navigation -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Settings</h3>
+            <nav class="space-y-2">
+              <button
+                (click)="setActiveSection('notifications')"
+                [class]="activeSection() === 'notifications' 
+                  ? 'w-full text-left px-3 py-2 rounded-md bg-blue-50 text-blue-700 font-medium'
+                  : 'w-full text-left px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-gray-900'"
+              >
+                🔔 Notifications
+              </button>
+              <button
+                (click)="setActiveSection('privacy')"
+                [class]="activeSection() === 'privacy' 
+                  ? 'w-full text-left px-3 py-2 rounded-md bg-blue-50 text-blue-700 font-medium'
+                  : 'w-full text-left px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-gray-900'"
+              >
+                🔒 Privacy
+              </button>
+              <button
+                (click)="setActiveSection('security')"
+                [class]="activeSection() === 'security' 
+                  ? 'w-full text-left px-3 py-2 rounded-md bg-blue-50 text-blue-700 font-medium'
+                  : 'w-full text-left px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-gray-900'"
+              >
+                🛡️ Security
+              </button>
+              <button
+                (click)="setActiveSection('billing')"
+                [class]="activeSection() === 'billing' 
+                  ? 'w-full text-left px-3 py-2 rounded-md bg-blue-50 text-blue-700 font-medium'
+                  : 'w-full text-left px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-gray-900'"
+              >
+                💳 Billing
+              </button>
+              <button
+                (click)="setActiveSection('advanced')"
+                [class]="activeSection() === 'advanced' 
+                  ? 'w-full text-left px-3 py-2 rounded-md bg-blue-50 text-blue-700 font-medium'
+                  : 'w-full text-left px-3 py-2 rounded-md text-gray-700 hover:bg-gray-50 hover:text-gray-900'"
+              >
+                ⚙️ Advanced
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Right Content Area -->
+        <div class="lg:col-span-3">
+          <!-- Notifications Section -->
+          @if (activeSection() === 'notifications') {
+            <div class="bg-white rounded-lg shadow-md p-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-6">Notification Preferences</h2>
+              
+              <form [formGroup]="notificationForm" (ngSubmit)="saveNotificationSettings()" class="space-y-6">
+                <!-- Communication Channels -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Communication Channels</h3>
+                  <div class="space-y-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="email" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Email notifications</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="push" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Push notifications</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="sms" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">SMS notifications</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Bill & Payment Notifications -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Bill & Payment Notifications</h3>
+                  <div class="space-y-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="billReminders" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Bill reminders</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="paymentConfirmations" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Payment confirmations</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Security & Reports -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Security & Reports</h3>
+                  <div class="space-y-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="securityAlerts" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Security alerts</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="weeklyReports" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Weekly activity reports</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Marketing -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Marketing & Updates</h3>
+                  <div class="space-y-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="marketing" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Marketing communications</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                  <button
+                    type="submit"
+                    [disabled]="saving()"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  >
+                    @if (saving()) {
+                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Saving...</span>
+                    } @else {
+                      <span>💾 Save Notifications</span>
+                    }
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <!-- Privacy Section -->
+          @if (activeSection() === 'privacy') {
+            <div class="bg-white rounded-lg shadow-md p-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-6">Privacy Settings</h2>
+              
+              <form [formGroup]="privacyForm" (ngSubmit)="savePrivacySettings()" class="space-y-6">
+                <!-- Profile Visibility -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Profile Visibility</h3>
+                  <div class="space-y-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="profileVisible" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Profile visible to friends</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="showBalance" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Show wallet balance to friends</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="showActivity" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Show recent activity</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Social Settings -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Social Settings</h3>
+                  <div class="space-y-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="allowFriendRequests" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Allow friend requests</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="showOnlineStatus" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Show online status</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Data Sharing -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Data & Analytics</h3>
+                  <div class="space-y-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="dataSharing" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Share anonymous usage data for app improvement</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                  <button
+                    type="submit"
+                    [disabled]="saving()"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  >
+                    @if (saving()) {
+                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Saving...</span>
+                    } @else {
+                      <span>💾 Save Privacy</span>
+                    }
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <!-- Security Section -->
+          @if (activeSection() === 'security') {
+            <div class="bg-white rounded-lg shadow-md p-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-6">Security Settings</h2>
+              
+              <form [formGroup]="securityForm" (ngSubmit)="saveSecuritySettings()" class="space-y-6">
+                <!-- Two-Factor Authentication -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="text-lg font-medium text-gray-900">Two-Factor Authentication</h3>
+                      <p class="text-sm text-gray-600 mt-1">Add an extra layer of security to your account</p>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="toggleTwoFactorAuth()"
+                      [disabled]="saving()"
+                      class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      @if (saving()) {
+                        <span>Updating...</span>
+                      } @else {
+                        <span>{{ securityForm.get('twoFactorAuth')?.value ? 'Disable' : 'Enable' }}</span>
+                      }
+                    </button>
+                  </div>
+                  <div class="mt-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="twoFactorAuth" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" disabled>
+                      <span class="ml-3 text-gray-700">Use two-factor authentication</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Login Security -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Login Security</h3>
+                  <div class="space-y-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="biometricLogin" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Enable biometric login (fingerprint/face ID)</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="loginNotifications" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Notify me of new logins</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Session Management -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Session Management</h3>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Session timeout</label>
+                    <select formControlName="sessionTimeout" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                      @for (option of getSessionTimeoutOptions(); track option.value) {
+                        <option [value]="option.value">{{ option.label }}</option>
+                      }
+                    </select>
+                    <p class="text-sm text-gray-500 mt-1">Automatically log out after inactivity</p>
+                  </div>
+                </div>
+
+                <!-- Security Alerts -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Security Alerts</h3>
+                  <div class="space-y-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="suspiciousActivityAlerts" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Alert me of suspicious activity</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                  <button
+                    type="submit"
+                    [disabled]="saving()"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  >
+                    @if (saving()) {
+                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Saving...</span>
+                    } @else {
+                      <span>💾 Save Security</span>
+                    }
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <!-- Billing Section -->
+          @if (activeSection() === 'billing') {
+            <div class="bg-white rounded-lg shadow-md p-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-6">Billing & Payment Settings</h2>
+              
+              <form [formGroup]="billingForm" (ngSubmit)="saveBillingSettings()" class="space-y-6">
+                <!-- Auto-Recharge -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Auto-Recharge</h3>
+                  <div class="space-y-4">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="autoRecharge" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Automatically recharge wallet when balance is low</span>
+                    </label>
+                    
+                    @if (billingForm.get('autoRecharge')?.value) {
+                      <div class="ml-7">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Recharge amount</label>
+                        <select formControlName="rechargeAmount" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                          @for (option of getRechargeAmountOptions(); track option.value) {
+                            <option [value]="option.value">{{ option.label }}</option>
+                          }
+                        </select>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Balance Alerts -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Balance Alerts</h3>
+                  <div class="space-y-4">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="lowBalanceAlert" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Notify me when balance is low</span>
+                    </label>
+                    
+                    @if (billingForm.get('lowBalanceAlert')?.value) {
+                      <div class="ml-7">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Alert threshold</label>
+                        <select formControlName="alertThreshold" class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                          @for (option of getAlertThresholdOptions(); track option.value) {
+                            <option [value]="option.value">{{ option.label }}</option>
+                          }
+                        </select>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Reports & Documents -->
+                <div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-4">Reports & Documents</h3>
+                  <div class="space-y-3">
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="monthlyReports" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Send monthly activity reports</span>
+                    </label>
+                    <label class="flex items-center">
+                      <input type="checkbox" formControlName="taxDocuments" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                      <span class="ml-3 text-gray-700">Generate tax documents annually</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end">
+                  <button
+                    type="submit"
+                    [disabled]="billingForm.invalid || saving()"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  >
+                    @if (saving()) {
+                      <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Saving...</span>
+                    } @else {
+                      <span>💾 Save Billing</span>
+                    }
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <!-- Advanced Section -->
+          @if (activeSection() === 'advanced') {
+            <div class="bg-white rounded-lg shadow-md p-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-6">Advanced Settings</h2>
+              
+              <div class="space-y-6">
+                <!-- Data Export -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="text-lg font-medium text-gray-900">Export Your Data</h3>
+                      <p class="text-sm text-gray-600 mt-1">Download a copy of all your data including bills, transactions, and account information</p>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="exportUserData()"
+                      [disabled]="saving()"
+                      class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      @if (saving()) {
+                        <span>Exporting...</span>
+                      } @else {
+                        <span>📥 Export Data</span>
+                      }
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Account Deletion -->
+                <div class="border border-red-200 rounded-lg p-4 bg-red-50">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="text-lg font-medium text-red-900">Delete Account</h3>
+                      <p class="text-sm text-red-600 mt-1">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="deleteAccount()"
+                      [disabled]="saving()"
+                      class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      @if (saving()) {
+                        <span>Processing...</span>
+                      } @else {
+                        <span>🗑️ Delete Account</span>
+                      }
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Version Information -->
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <h3 class="text-lg font-medium text-gray-900 mb-2">App Information</h3>
+                  <div class="text-sm text-gray-600 space-y-1">
+                    <p><strong>Version:</strong> 1.0.0</p>
+                    <p><strong>Build:</strong> 2024.01.15</p>
+                    <p><strong>Environment:</strong> Development</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

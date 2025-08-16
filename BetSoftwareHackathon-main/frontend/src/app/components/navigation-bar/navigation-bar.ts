@@ -11,7 +11,7 @@ import { Notification, User } from '../../interfaces';
   standalone: true,
   imports: [CommonModule, RouterModule, RouterLink, RouterLinkActive, FormsModule],
   templateUrl: './navigation-bar.html',
-  styleUrl: './navigation-bar.css'
+  styleUrls: ['./navigation-bar.css']
 })
 export class NavigationBar implements OnInit, OnDestroy {
   private readonly router = inject(Router);

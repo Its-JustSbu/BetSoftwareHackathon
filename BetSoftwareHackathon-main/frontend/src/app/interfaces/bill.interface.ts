@@ -18,6 +18,7 @@ export interface Bill {
 }
 
 export interface BillParticipant {
+  id?: string; // added for demo compatibility
   userId: string;
   userName: string;
   userEmail: string;
@@ -28,6 +29,9 @@ export interface BillParticipant {
   paidAt?: Date;
   paymentMethod?: string;
   notes?: string;
+  // Added for template compatibility
+  name?: string; // alias for userName
+  email?: string; // alias for userEmail
 }
 
 export type BillCategory = 
