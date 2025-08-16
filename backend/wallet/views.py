@@ -66,6 +66,15 @@ def deposit_money(request, wallet_id):
         amount = serializer.validated_data['amount']
         description = serializer.validated_data.get('description', 'Wallet deposit')
 
+        # For large deposits, validate KYC requirements
+        if float(amount) > 1000:  # Deposits over R1000 require basic KYC
+            is_valid, error_message = wallet.validate_transaction(amount, 'DEPOSIT')
+            if not is_valid:
+                return Response(
+                    {"error": error_message},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         with transaction.atomic():
             # Create transaction record
             txn = Transaction.objects.create(
@@ -107,10 +116,11 @@ def transfer_money(request, wallet_id):
 
         recipient_wallet = get_object_or_404(Wallet, id=recipient_wallet_id, is_active=True)
 
-        # Check if sender has sufficient balance
-        if not sender_wallet.can_debit(amount):
+        # Validate transaction with KYC checks
+        is_valid, error_message = sender_wallet.validate_transaction(amount, 'TRANSFER_OUT')
+        if not is_valid:
             return Response(
-                {"error": "Insufficient balance"},
+                {"error": error_message},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -277,10 +287,11 @@ def contribute_to_piggybank(request, piggybank_id):
 
         wallet = get_object_or_404(Wallet, id=wallet_id, owner=request.user, is_active=True)
 
-        # Check if wallet has sufficient balance
-        if not wallet.can_debit(amount):
+        # Validate transaction with KYC checks
+        is_valid, error_message = wallet.validate_transaction(amount, 'PIGGYBANK_CONTRIBUTION')
+        if not is_valid:
             return Response(
-                {"error": "Insufficient balance in wallet"},
+                {"error": error_message},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
