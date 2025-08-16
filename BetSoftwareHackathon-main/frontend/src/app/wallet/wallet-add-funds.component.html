@@ -1,0 +1,236 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center space-x-4">
+        <button
+          (click)="goBack()"
+          class="text-gray-600 hover:text-gray-900 transition-colors duration-200"
+        >
+          ← Back to Wallets
+        </button>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-900 mt-2">Add Funds</h1>
+      @if (wallet()) {
+        <p class="mt-2 text-gray-600">{{ wallet()?.name }} - {{ wallet()?.currency }}</p>
+      }
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <span class="ml-3 text-gray-600">Loading wallet details...</span>
+      </div>
+    }
+
+    <!-- Error Alert -->
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <span class="text-red-500 text-xl mr-3">⚠️</span>
+            <div>
+              <h3 class="text-red-800 font-medium">Error</h3>
+              <p class="text-red-600 mt-1">{{ error() }}</p>
+            </div>
+          </div>
+          <button
+            (click)="clearError()"
+            class="text-red-400 hover:text-red-600"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Success Alert -->
+    @if (success()) {
+      <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <span class="text-green-500 text-xl mr-3">✅</span>
+            <div>
+              <h3 class="text-green-800 font-medium">Success!</h3>
+              <p class="text-green-600 mt-1">{{ success() }}</p>
+            </div>
+          </div>
+          <button
+            (click)="clearSuccess()"
+            class="text-green-400 hover:text-green-600"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Add Funds Form -->
+    @if (!loading()) {
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <form [formGroup]="addFundsForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          <!-- Amount Input -->
+          <div>
+            <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">
+              Amount to Add
+            </label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                {{ wallet()?.currency || '$' }}
+              </span>
+              <input
+                id="amount"
+                type="number"
+                formControlName="amount"
+                step="0.01"
+                min="0.01"
+                max="10000"
+                placeholder="0.00"
+                class="block w-full pl-8 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                [class.border-red-300]="isFieldInvalid('amount')"
+                [class.focus:ring-red-500]="isFieldInvalid('amount')"
+                [class.focus:border-red-500]="isFieldInvalid('amount')"
+              >
+            </div>
+            @if (getFieldError('amount')) {
+              <p class="mt-1 text-sm text-red-600">{{ getFieldError('amount') }}</p>
+            }
+            <p class="mt-1 text-sm text-gray-500">
+              Minimum: {{ formatCurrency(0.01, wallet()?.currency) }} | Maximum: {{ formatCurrency(10000, wallet()?.currency) }}
+            </p>
+          </div>
+
+          <!-- Payment Method Selection -->
+          <div>
+            <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-2">
+              Payment Method
+            </label>
+            <div class="space-y-3">
+              @if (paymentMethods().length === 0) {
+                <div class="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+                  <div class="text-4xl mb-2">💳</div>
+                  <p class="text-gray-600 mb-4">No payment methods available</p>
+                  <button
+                    type="button"
+                    (click)="addPaymentMethod()"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200"
+                  >
+                    Add Payment Method
+                  </button>
+                </div>
+              } @else {
+                @for (method of paymentMethods(); track method.id) {
+                  <label class="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors duration-200">
+                    <input
+                      type="radio"
+                      [value]="method.id"
+                      formControlName="paymentMethodId"
+                      class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    >
+                    <div class="ml-3 flex items-center">
+                      <span class="text-xl mr-3">{{ getPaymentMethodIcon(method) }}</span>
+                      <div>
+                        <div class="text-sm font-medium text-gray-900">
+                          {{ getPaymentMethodDisplayName(method) }}
+                        </div>
+                        <div class="text-sm text-gray-500">
+                          {{ method.type.replace('_', ' ').toUpperCase() }}
+                          @if (method.isDefault) {
+                            <span class="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Default</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                }
+              }
+            </div>
+            @if (getFieldError('paymentMethodId')) {
+              <p class="mt-1 text-sm text-red-600">{{ getFieldError('paymentMethodId') }}</p>
+            }
+          </div>
+
+          <!-- Description Input -->
+          <div>
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+              Description (Optional)
+            </label>
+            <textarea
+              id="description"
+              formControlName="description"
+              rows="3"
+              placeholder="Add a note about this transaction..."
+              class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              [class.border-red-300]="isFieldInvalid('description')"
+              [class.focus:ring-red-500]="isFieldInvalid('description')"
+              [class.focus:border-red-500]="isFieldInvalid('description')"
+            ></textarea>
+            @if (getFieldError('description')) {
+              <p class="mt-1 text-sm text-red-600">{{ getFieldError('description') }}</p>
+            }
+            <p class="mt-1 text-sm text-gray-500">
+              {{ addFundsForm.get('description')?.value?.length || 0 }}/200 characters
+            </p>
+          </div>
+
+          <!-- Current Balance Display -->
+          @if (wallet()) {
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-medium text-gray-700">Current Balance:</span>
+                <span class="text-lg font-bold text-gray-900">
+                  {{ formatCurrency(wallet()!.balance, wallet()!.currency) }}
+                </span>
+              </div>
+              @if (addFundsForm.get('amount')?.value) {
+                <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
+                  <span class="text-sm font-medium text-gray-700">New Balance:</span>
+                  <span class="text-lg font-bold text-green-600">
+                    {{ formatCurrency(wallet()!.balance + parseFloat(addFundsForm.get('amount')?.value || '0'), wallet()!.currency) }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Submit Button -->
+          <div class="flex space-x-4">
+            <button
+              type="button"
+              (click)="goBack()"
+              class="flex-1 bg-gray-100 text-gray-700 px-4 py-3 rounded-md hover:bg-gray-200 transition-colors duration-200 font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              [disabled]="addFundsForm.invalid || submitting()"
+              class="flex-1 bg-blue-600 text-white px-4 py-3 rounded-md hover:bg-blue-700 transition-colors duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+              @if (submitting()) {
+                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                <span>Adding Funds...</span>
+              } @else {
+                <span>💰 Add Funds</span>
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Security Notice -->
+      <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-start">
+          <span class="text-blue-500 text-xl mr-3">🔒</span>
+          <div>
+            <h3 class="text-blue-800 font-medium">Secure Transaction</h3>
+            <p class="text-blue-600 text-sm mt-1">
+              Your payment information is encrypted and secure. We use industry-standard security measures to protect your data.
+            </p>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div> 

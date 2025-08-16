@@ -1,0 +1,170 @@
+/* Navigation Bar Custom Styles */
+
+/* Smooth transitions for dropdowns */
+.dropdown-container {
+  position: relative;
+}
+
+/* Notification badge animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.notification-badge {
+  animation: pulse 2s infinite;
+}
+
+/* Mobile menu slide animation */
+.mobile-menu-enter {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+.mobile-menu-enter-active {
+  transform: translateY(0);
+  opacity: 1;
+  transition: all 0.3s ease-out;
+}
+
+.mobile-menu-exit {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.mobile-menu-exit-active {
+  transform: translateY(-100%);
+  opacity: 0;
+  transition: all 0.3s ease-in;
+}
+
+/* Dropdown animations */
+.dropdown-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.dropdown-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.2s ease-out;
+}
+
+.dropdown-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dropdown-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.2s ease-in;
+}
+
+/* Hover effects for navigation items */
+.nav-item {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #2563eb;
+  transition: width 0.2s ease;
+}
+
+.nav-item:hover::after {
+  width: 100%;
+}
+
+/* Profile avatar hover effect */
+.profile-avatar {
+  transition: transform 0.2s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+}
+
+/* Notification item hover effect */
+.notification-item {
+  transition: all 0.2s ease;
+}
+
+.notification-item:hover {
+  transform: translateX(2px);
+}
+
+/* Mobile menu backdrop */
+.mobile-menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .nav-brand {
+    font-size: 1.5rem;
+  }
+  
+  .nav-item {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Focus states for accessibility */
+.nav-button:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Loading state for notifications */
+.notifications-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.notifications-loading::after {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #2563eb;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Empty state styling */
+.notifications-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.notifications-empty::before {
+  content: '🔔';
+  display: block;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}

@@ -1,0 +1,164 @@
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">My Wallets</h1>
+          <p class="mt-2 text-gray-600">Manage your wallets and view balances</p>
+        </div>
+        <button
+          (click)="createWallet()"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
+        >
+          <span>➕</span>
+          <span>Create Wallet</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <span class="ml-3 text-gray-600">Loading wallets...</span>
+      </div>
+    }
+
+    <!-- Error State -->
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+        <div class="flex items-center">
+          <span class="text-red-500 text-xl mr-3">⚠️</span>
+          <div>
+            <h3 class="text-red-800 font-medium">Error Loading Wallets</h3>
+            <p class="text-red-600 mt-1">{{ error() }}</p>
+          </div>
+        </div>
+        <button
+          (click)="retry()"
+          class="mt-4 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors duration-200"
+        >
+          Try Again
+        </button>
+      </div>
+    }
+
+    <!-- Wallet Summary -->
+    @if (walletSummary() && !loading()) {
+      <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Summary</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600">
+              {{ formatCurrency(totalBalance(), primaryCurrency()) }}
+            </div>
+            <div class="text-sm text-gray-600">Total Balance</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-gray-900">
+              {{ totalWallets() }}
+            </div>
+            <div class="text-sm text-gray-600">Active Wallets</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-green-600">
+              {{ walletSummary()?.recentTransactions?.length || 0 }}
+            </div>
+            <div class="text-sm text-gray-600">Recent Transactions</div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Wallets Grid -->
+    @if (!loading() && !error()) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @for (wallet of wallets(); track wallet.id) {
+          <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+            <!-- Wallet Header -->
+            <div class="p-6 border-b border-gray-200">
+              <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center space-x-3">
+                  <span class="text-2xl">{{ getWalletTypeIcon(wallet.name.toLowerCase()) }}</span>
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ wallet.name }}</h3>
+                    <p class="text-sm text-gray-500">{{ wallet.currency }}</p>
+                  </div>
+                </div>
+                @if (wallet.isDefault) {
+                  <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Default</span>
+                }
+              </div>
+              
+              <!-- Balance -->
+              <div class="mb-4">
+                <div class="text-3xl font-bold text-gray-900">
+                  {{ formatCurrency(wallet.balance, wallet.currency) }}
+                </div>
+                <div class="text-sm text-gray-500">
+                  Last updated: {{ wallet.lastTransactionAt | date:'short' }}
+                </div>
+              </div>
+
+              <!-- Status -->
+              @if (getWalletStatus(wallet)) {
+                @if (status = getWalletStatus(wallet); status) {
+                  <span class="inline-block px-2 py-1 text-xs font-medium rounded-full {{ status.color }}">
+                    {{ status.text }}
+                  </span>
+                }
+              }
+            </div>
+
+            <!-- Wallet Actions -->
+            <div class="p-6">
+              <div class="flex space-x-3">
+                <button
+                  (click)="viewTransactions(wallet.id)"
+                  class="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
+                >
+                  📊 View Transactions
+                </button>
+                <button
+                  (click)="addFunds(wallet.id)"
+                  class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+                >
+                  💰 Add Funds
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Empty State -->
+      @if (wallets().length === 0) {
+        <div class="text-center py-12">
+          <div class="text-6xl mb-4">💰</div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No Wallets Yet</h3>
+          <p class="text-gray-600 mb-6">Create your first wallet to start managing your money</p>
+          <button
+            (click)="createWallet()"
+            class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+          >
+            Create Your First Wallet
+          </button>
+        </div>
+      }
+    }
+
+    <!-- Refresh Button -->
+    @if (!loading() && !error() && wallets().length > 0) {
+      <div class="mt-8 text-center">
+        <button
+          (click)="refreshWallets()"
+          class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center space-x-1 mx-auto"
+        >
+          <span>🔄</span>
+          <span>Refresh</span>
+        </button>
+      </div>
+    }
+  </div>
+</div> 

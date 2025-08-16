@@ -1,1 +1,242 @@
-<p>navigation-bar works!</p>
+<nav class="bg-white shadow-lg border-b border-gray-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16">
+      <!-- Logo and Brand -->
+      <div class="flex items-center">
+        <div class="flex-shrink-0 flex items-center">
+          <h1 class="text-2xl font-bold text-blue-600">💰 SplitPay</h1>
+        </div>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <div class="hidden md:flex items-center space-x-8">
+        <!-- Navigation Links (Authenticated Users) -->
+        @if (isAuthenticated()) {
+          @for (item of navigationItems; track item.path) {
+            <a 
+              [routerLink]="item.path" 
+              routerLinkActive="text-blue-600 border-b-2 border-blue-600" 
+              class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-1"
+            >
+              <span>{{ item.icon }}</span>
+              <span>{{ item.label }}</span>
+            </a>
+          }
+        }
+      </div>
+
+      <!-- Right Side Items -->
+      <div class="flex items-center space-x-4">
+        <!-- Notifications (Authenticated Users) -->
+        @if (isAuthenticated()) {
+          <div class="relative dropdown-container">
+            <button
+              (click)="toggleNotificationsDropdown()"
+              class="relative p-2 text-gray-700 hover:text-blue-600 transition-colors duration-200"
+              aria-label="Notifications"
+            >
+              <span class="text-xl">🔔</span>
+              @if (unreadNotificationsCount() > 0) {
+                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {{ unreadNotificationsCount() }}
+                </span>
+              }
+            </button>
+
+            <!-- Notifications Dropdown -->
+            @if (isNotificationsDropdownOpen()) {
+              <div class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div class="p-4 border-b border-gray-200">
+                  <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
+                    @if (unreadNotificationsCount() > 0) {
+                      <button
+                        (click)="markAllNotificationsAsRead()"
+                        class="text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        Mark all read
+                      </button>
+                    }
+                  </div>
+                </div>
+                <div class="max-h-96 overflow-y-auto">
+                  @if (notifications().length === 0) {
+                    <div class="p-4 text-center text-gray-500">
+                      No notifications
+                    </div>
+                  } @else {
+                    @for (notification of notifications(); track notification.id) {
+                      <div 
+                        class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                        [class.bg-blue-50]="!notification.isRead"
+                        (click)="markNotificationAsRead(notification.id)"
+                      >
+                        <div class="flex items-start space-x-3">
+                          <span class="text-lg">{{ getNotificationIcon(notification.type) }}</span>
+                          <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between">
+                              <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>
+                              <span class="text-xs text-gray-500">
+                                {{ notification.createdAt | date:'shortTime' }}
+                              </span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-1">{{ notification.message }}</p>
+                            @if (!notification.isRead) {
+                              <div class="flex items-center mt-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                <span class="text-xs text-blue-600 ml-2">New</span>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  }
+                </div>
+                <div class="p-4 border-t border-gray-200">
+                  <a 
+                    routerLink="/notifications" 
+                    class="text-sm text-blue-600 hover:text-blue-800 text-center block"
+                    (click)="closeDropdowns()"
+                  >
+                    View all notifications
+                  </a>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Profile Dropdown -->
+          <div class="relative dropdown-container">
+            <button
+              (click)="toggleProfileDropdown()"
+              class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors duration-200"
+              aria-label="Profile menu"
+            >
+              <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                {{ getUserInitials() }}
+              </div>
+              <span class="hidden lg:block text-sm font-medium">{{ getFullName() }}</span>
+              <span class="text-gray-400">▼</span>
+            </button>
+
+            <!-- Profile Dropdown Menu -->
+            @if (isProfileDropdownOpen()) {
+              <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                <div class="py-1">
+                  <a 
+                    routerLink="/profile" 
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                    (click)="closeDropdowns()"
+                  >
+                    👤 Profile
+                  </a>
+                  <a 
+                    routerLink="/settings" 
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                    (click)="closeDropdowns()"
+                  >
+                    ⚙️ Settings
+                  </a>
+                  <hr class="my-1">
+                  <button
+                    (click)="logout()"
+                    class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
+                  >
+                    🚪 Logout
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- Auth Buttons (Not Authenticated) -->
+          <a 
+            routerLink="/login" 
+            class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+          >
+            Login
+          </a>
+          <a 
+            routerLink="/register" 
+            class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+          >
+            Register
+          </a>
+        }
+      </div>
+
+      <!-- Mobile menu button -->
+      <div class="md:hidden flex items-center">
+        <button
+          (click)="toggleMenu()"
+          class="text-gray-700 hover:text-blue-600 p-2 rounded-md transition-colors duration-200"
+          aria-label="Toggle menu"
+        >
+          @if (isMenuOpen()) {
+            <span class="text-xl">✕</span>
+          } @else {
+            <span class="text-xl">☰</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Navigation Menu -->
+  @if (isMenuOpen()) {
+    <div class="md:hidden bg-white border-t border-gray-200">
+      <div class="px-2 pt-2 pb-3 space-y-1">
+        @if (isAuthenticated()) {
+          @for (item of navigationItems; track item.path) {
+            <a 
+              [routerLink]="item.path" 
+              routerLinkActive="bg-blue-50 text-blue-600" 
+              class="text-gray-700 hover:bg-gray-50 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 flex items-center space-x-2"
+              (click)="closeDropdowns()"
+            >
+              <span>{{ item.icon }}</span>
+              <span>{{ item.label }}</span>
+            </a>
+          }
+          <hr class="my-2">
+          <a 
+            routerLink="/profile" 
+            class="text-gray-700 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+            (click)="closeDropdowns()"
+          >
+            👤 Profile
+          </a>
+          <a 
+            routerLink="/settings" 
+            class="text-gray-700 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+            (click)="closeDropdowns()"
+          >
+            ⚙️ Settings
+          </a>
+          <button
+            (click)="logout()"
+            class="w-full text-left text-red-600 hover:bg-red-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+          >
+            🚪 Logout
+          </button>
+        } @else {
+          <a 
+            routerLink="/login" 
+            class="text-gray-700 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+            (click)="closeDropdowns()"
+          >
+            Login
+          </a>
+          <a 
+            routerLink="/register" 
+            class="bg-blue-600 text-white hover:bg-blue-700 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+            (click)="closeDropdowns()"
+          >
+            Register
+          </a>
+        }
+      </div>
+    </div>
+  }
+</nav>
