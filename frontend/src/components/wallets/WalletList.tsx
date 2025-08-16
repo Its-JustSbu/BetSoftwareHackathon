@@ -33,7 +33,7 @@ const WalletList: React.FC = () => {
 
   useEffect(() => {
     loadWallets();
-  }, []);
+  }, [wallets]);
 
   const loadWallets = async () => {
     try {

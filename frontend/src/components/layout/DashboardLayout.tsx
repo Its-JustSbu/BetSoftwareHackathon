@@ -5,7 +5,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 
 const DashboardLayout: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
 
   const toggleSidebar = () => {
@@ -38,7 +38,7 @@ const DashboardLayout: React.FC = () => {
       <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen lg:ml-0">
+      <div className="flex-1 flex flex-col lg:ml-0">
         {/* Header */}
         <Header
           onMenuToggle={toggleSidebar}

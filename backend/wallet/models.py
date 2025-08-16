@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from decimal import Decimal
 import uuid
 
@@ -26,6 +27,50 @@ class Wallet(models.Model):
     def can_debit(self, amount):
         """Check if wallet has sufficient balance for debit"""
         return self.balance >= amount
+
+    def validate_transaction(self, amount, transaction_type='TRANSFER'):
+        """
+        Validate if transaction can proceed based on KYC status and limits
+        Returns tuple: (is_valid: bool, error_message: str or None)
+        """
+        # Check if owner can perform transaction
+        can_transact, reason = self.owner.can_perform_transaction(amount)
+        if not can_transact:
+            return False, reason
+        
+        # Check if amount exceeds daily limit
+        current_limit = self.owner.get_transaction_limit()
+        if float(amount) > current_limit:
+            needs_upgrade, upgrade_reason = self.owner.requires_kyc_upgrade(amount)
+            if needs_upgrade:
+                return False, f"Transaction amount R{amount} exceeds limit R{current_limit}. {upgrade_reason}."
+        
+        # Check wallet balance for debits
+        if transaction_type in ['TRANSFER_OUT', 'WITHDRAWAL', 'PIGGYBANK_CONTRIBUTION']:
+            if not self.can_debit(amount):
+                return False, f"Insufficient balance. Available: R{self.balance}, Required: R{amount}"
+        
+        return True, None
+
+    def create_transaction(self, transaction_type, amount, description="", **kwargs):
+        """
+        Create a transaction with KYC validation
+        """
+        # Validate transaction
+        is_valid, error_message = self.validate_transaction(amount, transaction_type)
+        if not is_valid:
+            raise ValidationError(error_message)
+        
+        # Create the transaction
+        transaction = Transaction.objects.create(
+            wallet=self,
+            transaction_type=transaction_type,
+            amount=amount,
+            description=description,
+            **kwargs
+        )
+        
+        return transaction
 
 
 class Transaction(models.Model):

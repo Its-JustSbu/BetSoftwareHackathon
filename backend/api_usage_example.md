@@ -1,24 +1,292 @@
-# Wallet Transfer and Piggy Bank API Usage Examples
+# Wallet, KYC, and Bot API Usage Examples
 
-This document shows how to use the wallet transfer and piggy bank functionality through the REST API.
+This document shows how to use the wallet transfer, piggy bank, KYC verification, and bot API functionality through the REST API.
 
 ## Authentication System
 
-This project uses **Django Session Authentication**, not JWT tokens. This means:
+This project uses **Django Session Authentication** for regular user endpoints and **API Key Authentication** for bot endpoints:
 
+### Session Authentication (User Endpoints)
 1. You need to login first to get a session cookie
 2. The session cookie is automatically included in subsequent requests
 3. No need for Authorization headers with tokens
+
+### API Key Authentication (Bot Endpoints)
+1. Create an API key using the management command
+2. Include the API key in the `Authorization` header as `Api-Key YOUR_KEY`
+3. Bot endpoints are at `/bot-api/` and bypass CSRF protection
 
 ## Prerequisites
 
 1. Start the Django development server:
    ```bash
    cd backend
+   source .venv/bin/activate
    python manage.py runserver
    ```
 
 2. Create user accounts and login to get session cookies.
+
+3. For bot API access, create an API key:
+   ```bash
+   python manage.py create_bot_api_key --name "My Bot Key"
+   # Returns: API Key created: abcd1234-your-api-key-here
+   ```
+
+## Bot API Usage (For Automated Systems)
+
+The bot API allows automated systems to query user information using API key authentication.
+
+### Create API Key
+
+```bash
+cd backend
+source .venv/bin/activate
+python manage.py create_bot_api_key --name "Trading Bot"
+# Output: API Key created: abcd1234-5678-90ef-ghij-klmnopqrstuv
+```
+
+### List Existing API Keys
+
+```bash
+python manage.py list_bot_api_keys
+```
+
+### Bot API Endpoints
+
+All bot endpoints require the `Api-Key` header and are prefixed with `/bot-api/`:
+
+```bash
+# Get user information
+curl -X GET http://localhost:8000/bot-api/users/alice/ \
+  -H "Authorization: Api-Key YOUR_API_KEY_HERE"
+
+# Response: {
+#   "id": "user-uuid",
+#   "username": "alice",
+#   "email": "alice@example.com",
+#   "date_joined": "2024-01-01T00:00:00Z",
+#   "is_active": true
+# }
+
+# Get user's wallet information
+curl -X GET http://localhost:8000/bot-api/users/alice/wallet/ \
+  -H "Authorization: Api-Key YOUR_API_KEY_HERE"
+
+# Response: {
+#   "id": "wallet-uuid",
+#   "name": "Alice Main Wallet",
+#   "balance": "450.00",
+#   "created_at": "2024-01-01T00:00:00Z"
+# }
+
+# Get user's transaction history
+curl -X GET http://localhost:8000/bot-api/users/alice/transactions/ \
+  -H "Authorization: Api-Key YOUR_API_KEY_HERE"
+
+# Response: [
+#   {
+#     "id": "transaction-uuid",
+#     "amount": "100.00",
+#     "transaction_type": "TRANSFER_OUT",
+#     "description": "Payment for dinner",
+#     "created_at": "2024-01-01T12:00:00Z"
+#   }
+# ]
+
+# Get user's piggy bank information
+curl -X GET http://localhost:8000/bot-api/users/alice/piggybanks/ \
+  -H "Authorization: Api-Key YOUR_API_KEY_HERE"
+
+# Response: [
+#   {
+#     "id": "piggybank-uuid",
+#     "name": "Restaurant Dinner Bill",
+#     "current_amount": "300.00",
+#     "target_amount": "300.00",
+#     "is_target_reached": true
+#   }
+# ]
+```
+
+## KYC (Know Your Customer) Verification
+
+The KYC system allows users to verify their identity by providing personal information and uploading documents.
+
+### Create KYC Profile
+
+```bash
+# User must be logged in (using session cookie)
+curl -X POST http://localhost:8000/api/kyc/profile/ \
+  -H "Content-Type: application/json" \
+  -b alice_cookies.txt \
+  -d '{
+    "first_name": "Alice",
+    "last_name": "Johnson",
+    "middle_name": "Marie",
+    "date_of_birth": "1990-05-15",
+    "nationality": "South African",
+    "id_number": "9005150123084",
+    "id_type": "NATIONAL_ID",
+    "street_address": "123 Main Street",
+    "city": "Cape Town",
+    "province": "Western Cape",
+    "postal_code": "8001",
+    "country": "South Africa",
+    "employment_status": "EMPLOYED",
+    "employer_name": "Tech Corp",
+    "job_title": "Software Developer",
+    "monthly_income": "25000.00"
+  }'
+
+# Response: {
+#   "id": "kyc-profile-uuid",
+#   "kyc_status": "PENDING",
+#   "verification_level": "BASIC",
+#   "is_verified": false,
+#   ...
+# }
+```
+
+### Get KYC Profile Status
+
+```bash
+curl -X GET http://localhost:8000/api/kyc/profile/ \
+  -b alice_cookies.txt
+
+# Response: {
+#   "id": "kyc-profile-uuid",
+#   "kyc_status": "PENDING",
+#   "verification_level": "BASIC",
+#   "is_verified": false,
+#   "full_name": "Alice Marie Johnson",
+#   ...
+# }
+```
+
+### Upload KYC Documents
+
+```bash
+# Upload ID document
+curl -X POST http://localhost:8000/api/kyc/documents/ \
+  -H "Content-Type: multipart/form-data" \
+  -b alice_cookies.txt \
+  -F "document_type=ID_DOCUMENT" \
+  -F "document_file=@/path/to/id_document.jpg"
+
+# Upload proof of address
+curl -X POST http://localhost:8000/api/kyc/documents/ \
+  -H "Content-Type: multipart/form-data" \
+  -b alice_cookies.txt \
+  -F "document_type=PROOF_OF_ADDRESS" \
+  -F "document_file=@/path/to/utility_bill.pdf"
+
+# Upload bank statement
+curl -X POST http://localhost:8000/api/kyc/documents/ \
+  -H "Content-Type: multipart/form-data" \
+  -b alice_cookies.txt \
+  -F "document_type=BANK_STATEMENT" \
+  -F "document_file=@/path/to/bank_statement.pdf"
+```
+
+### Get Document Upload Status
+
+```bash
+curl -X GET http://localhost:8000/api/kyc/documents/ \
+  -b alice_cookies.txt
+
+# Response: [
+#   {
+#     "id": "document-uuid",
+#     "document_type": "ID_DOCUMENT",
+#     "status": "PENDING",
+#     "file_size": 2048000,
+#     "uploaded_at": "2024-01-01T10:00:00Z"
+#   },
+#   ...
+# ]
+```
+
+### Get KYC Status Summary
+
+```bash
+curl -X GET http://localhost:8000/api/kyc/status/ \
+  -b alice_cookies.txt
+
+# Response: {
+#   "kyc_profile": {
+#     "kyc_status": "UNDER_REVIEW",
+#     "verification_level": "BASIC",
+#     "is_verified": false
+#   },
+#   "documents": {
+#     "total_uploaded": 3,
+#     "approved": 2,
+#     "pending": 1,
+#     "rejected": 0
+#   },
+#   "required_documents": [
+#     "ID_DOCUMENT",
+#     "PROOF_OF_ADDRESS",
+#     "BANK_STATEMENT"
+#   ],
+#   "next_steps": "Please wait for document review to complete."
+# }
+```
+
+### Get KYC History
+
+```bash
+curl -X GET http://localhost:8000/api/kyc/history/ \
+  -b alice_cookies.txt
+
+# Response: [
+#   {
+#     "action": "PROFILE_CREATED",
+#     "description": "KYC profile created",
+#     "timestamp": "2024-01-01T09:00:00Z",
+#     "performed_by": "alice"
+#   },
+#   {
+#     "action": "DOCUMENT_UPLOADED",
+#     "description": "Document ID Document uploaded",
+#     "timestamp": "2024-01-01T10:00:00Z",
+#     "performed_by": "alice"
+#   },
+#   ...
+# ]
+```
+
+### Admin KYC Management (Admin Users Only)
+
+```bash
+# Get all KYC profiles for review (admin only)
+curl -X GET http://localhost:8000/api/kyc/admin/profiles/ \
+  -b admin_cookies.txt
+
+# Approve a KYC profile (admin only)
+curl -X POST http://localhost:8000/api/kyc/admin/profiles/<kyc-profile-uuid>/approve/ \
+  -H "Content-Type: application/json" \
+  -b admin_cookies.txt \
+  -d '{"notes": "All documents verified successfully"}'
+
+# Reject a KYC profile (admin only)
+curl -X POST http://localhost:8000/api/kyc/admin/profiles/<kyc-profile-uuid>/reject/ \
+  -H "Content-Type: application/json" \
+  -b admin_cookies.txt \
+  -d '{
+    "rejection_reason": "ID document is not clear enough",
+    "notes": "Please resubmit with clearer image"
+  }'
+
+# Request profile update (admin only)
+curl -X POST http://localhost:8000/api/kyc/admin/profiles/<kyc-profile-uuid>/request-update/ \
+  -H "Content-Type: application/json" \
+  -b admin_cookies.txt \
+  -d '{
+    "notes": "Please update your address information"
+  }'
+```
 
 ## Authentication Steps
 
@@ -304,6 +572,11 @@ curl -X GET http://localhost:8000/api/piggybanks/<piggybank-uuid>/contributions/
 
 ## API Endpoints Summary
 
+### Authentication Endpoints
+- `POST /api/auth/register/` - Register new user
+- `POST /api/auth/login/` - Login user
+- `POST /api/auth/logout/` - Logout user
+
 ### Wallet Endpoints
 - `POST /api/wallets/` - Create wallet
 - `GET /api/wallets/<id>/` - Get wallet details
@@ -320,6 +593,29 @@ curl -X GET http://localhost:8000/api/piggybanks/<piggybank-uuid>/contributions/
 - `GET /api/piggybanks/<id>/contributions/` - View contributions
 - `GET /api/piggybanks/<id>/members/` - View members
 
+### KYC Endpoints
+- `POST /api/kyc/profile/` - Create/Update KYC profile
+- `GET /api/kyc/profile/` - Get user's KYC profile
+- `POST /api/kyc/documents/` - Upload KYC document
+- `GET /api/kyc/documents/` - Get user's uploaded documents
+- `GET /api/kyc/status/` - Get KYC verification status
+- `GET /api/kyc/history/` - Get KYC verification history
+
+### KYC Admin Endpoints (Admin Only)
+- `GET /api/kyc/admin/profiles/` - Get all KYC profiles for review
+- `POST /api/kyc/admin/profiles/<id>/approve/` - Approve KYC profile
+- `POST /api/kyc/admin/profiles/<id>/reject/` - Reject KYC profile
+- `POST /api/kyc/admin/profiles/<id>/request-update/` - Request profile update
+- `GET /api/kyc/admin/documents/` - Get all documents for review
+- `POST /api/kyc/admin/documents/<id>/approve/` - Approve document
+- `POST /api/kyc/admin/documents/<id>/reject/` - Reject document
+
+### Bot API Endpoints (API Key Required)
+- `GET /bot-api/users/<username>/` - Get user information
+- `GET /bot-api/users/<username>/wallet/` - Get user's wallet info
+- `GET /bot-api/users/<username>/transactions/` - Get user's transactions
+- `GET /bot-api/users/<username>/piggybanks/` - Get user's piggy banks
+
 ## Testing with Two App Instances
 
 To test transfers between users running different app instances:
@@ -331,3 +627,45 @@ To test transfers between users running different app instances:
 5. The transfers will work across different client instances as long as they connect to the same backend server
 
 The backend handles all the transaction logic, so transfers between users work regardless of which app instance they're using.
+
+## KYC Verification Levels and Requirements
+
+### Verification Levels
+- **BASIC**: Personal information and ID document
+- **ENHANCED**: Basic + proof of address
+- **PREMIUM**: Enhanced + bank statement and employment verification
+
+### KYC Status Values
+- **PENDING**: Initial state after profile creation
+- **UNDER_REVIEW**: Documents submitted, awaiting admin review
+- **APPROVED**: KYC verification completed successfully
+- **REJECTED**: KYC verification failed, see rejection_reason
+- **REQUIRES_UPDATE**: Additional information needed
+
+### Document Types
+- **ID_DOCUMENT**: National ID, passport, or driver's license
+- **PROOF_OF_ADDRESS**: Utility bill, bank statement with address
+- **BANK_STATEMENT**: Recent bank statement (last 3 months)
+- **EMPLOYMENT_LETTER**: Letter from employer confirming employment
+- **PAYSLIP**: Recent payslip for income verification
+- **OTHER**: Other supporting documents as requested
+
+### Supported File Types
+- Images: JPG, JPEG, PNG
+- Documents: PDF
+- Maximum file size: 5MB per document
+
+## Django Admin Interface
+
+Access the Django admin interface at `http://localhost:8000/admin/` to:
+
+- Review and approve/reject KYC profiles
+- Manage KYC documents
+- View KYC verification history
+- Configure KYC settings
+- Manage API keys for bot access
+
+Create a superuser account:
+```bash
+python manage.py createsuperuser
+```

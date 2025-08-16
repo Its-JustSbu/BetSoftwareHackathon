@@ -6,6 +6,10 @@
 /node_modules
 /.pnp
 .pnp.js
+.angular
+.vscode
+npm-debug.log
+yarn-error.log
 
 # testing
 /.pnp
