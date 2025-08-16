@@ -24,7 +24,7 @@ import SendMoneyModal from './SendMoneyModal';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
   const [wallets, setWallets] = useState<WalletType[]>([]);
   const [piggyBanks, setPiggyBanks] = useState<PiggyBankType[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
@@ -64,29 +64,50 @@ const Dashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
+      console.log('Loading dashboard data...');
+
       const [walletsResponse, piggyBanksResponse] = await Promise.all([
         walletAPI.getWallets(),
         piggyBankAPI.getPiggyBanks(),
       ]);
 
-      // Ensure we have arrays
-      setWallets(Array.isArray(walletsResponse.data) ? walletsResponse.data : []);
-      setPiggyBanks(Array.isArray(piggyBanksResponse.data) ? piggyBanksResponse.data : []);
+      console.log('Wallets response:', walletsResponse.data);
+      console.log('PiggyBanks response:', piggyBanksResponse.data);
+
+      // Handle both paginated and non-paginated responses
+      const walletData = Array.isArray(walletsResponse.data)
+        ? walletsResponse.data
+        : (walletsResponse.data?.results || []);
+
+      const piggyBankData = Array.isArray(piggyBanksResponse.data)
+        ? piggyBanksResponse.data
+        : (piggyBanksResponse.data?.results || []);
+
+      setWallets(walletData);
+      setPiggyBanks(piggyBankData);
+
+      console.log('Set wallets:', walletData);
+      console.log('Set piggy banks:', piggyBankData);
 
       // Load recent transactions from the first wallet if available
-      if (Array.isArray(walletsResponse.data) && walletsResponse.data.length > 0) {
+      if (walletData.length > 0) {
         try {
-          const transactionsResponse = await walletAPI.getTransactions(
-            walletsResponse.data[0].id
-          );
-          setRecentTransactions(Array.isArray(transactionsResponse.data) ? transactionsResponse.data.slice(0, 5) : []);
+          const transactionsResponse = await walletAPI.getTransactions(walletData[0].id);
+          const transactionData = Array.isArray(transactionsResponse.data)
+            ? transactionsResponse.data.slice(0, 5)
+            : (transactionsResponse.data?.results?.slice(0, 5) || []);
+          setRecentTransactions(transactionData);
+          console.log('Set recent transactions:', transactionData);
         } catch (transactionError) {
           console.error('Error loading transactions:', transactionError);
           setRecentTransactions([]);
         }
+      } else {
+        setRecentTransactions([]);
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      showError('Failed to Load Data', 'Unable to load your wallet information. Please try refreshing the page.');
       // Set default empty arrays on error
       setWallets([]);
       setPiggyBanks([]);

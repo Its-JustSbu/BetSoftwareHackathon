@@ -1,6 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -21,7 +21,7 @@ class WalletListCreateView(generics.ListCreateAPIView):
     """
     List user's wallets or create a new wallet
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -30,6 +30,9 @@ class WalletListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return Wallet.objects.filter(owner=self.request.user, is_active=True)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class WalletDetailView(generics.RetrieveUpdateDestroyAPIView):
