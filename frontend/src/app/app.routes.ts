@@ -6,8 +6,8 @@ import { Wallets } from './wallets/wallets';
 //Routes config to respective components
 export const routes: Routes = [
     {path: '', redirectTo: '/Dashboard', pathMatch: 'full'},
+    {path: 'Wallets', component: Wallets},
     {path: 'Dashboard', component: Dashboard},
     {path: 'Notfound', component: Notfound},
     {path: '**', redirectTo: '/Notfound'},
-    {path: 'Wallets', component: Wallets}
 ];
