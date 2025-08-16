@@ -85,6 +85,27 @@ class UserAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['username'], 'testuser')
 
+    def test_user_login_includes_session_id(self):
+        """Test that login response includes session_id"""
+        user = User.objects.create_user(
+            username='testuser2',
+            email='test2@example.com',
+            password='testpass123'
+        )
+
+        url = reverse('user-login')
+        data = {
+            'username': 'testuser2',
+            'password': 'testpass123'
+        }
+
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], 'testuser2')
+        self.assertIn('session_id', response.data)
+        self.assertIsNotNone(response.data['session_id'])
+
     def test_user_login_invalid_credentials(self):
         """Test user login with invalid credentials"""
         user = User.objects.create_user(
