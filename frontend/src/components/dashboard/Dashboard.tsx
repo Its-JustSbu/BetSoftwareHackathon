@@ -8,16 +8,19 @@ import {
   ArrowDownRight,
   Plus,
   Send,
+  Download,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { walletAPI, piggyBankAPI } from '../../services/api';
 import { Wallet as WalletType, PiggyBank as PiggyBankType, Transaction } from '../../types';
-import { formatCurrency, formatRelativeTime } from '../../utils';
+import { formatCurrency, formatRelativeTime, formatDate } from '../../utils';
 import LoadingSpinner from '../LoadingSpinner';
 import CreateWalletModal from '../wallets/CreateWalletModal';
 import CreatePiggyBankModal from '../piggybanks/CreatePiggyBankModal';
-import QuickTransferModal from './QuickTransferModal';
+import DepositModal from '../wallets/DepositModal';
+import TransferModal from '../wallets/TransferModal';
+import SendMoneyModal from './SendMoneyModal';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -28,7 +31,10 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
   const [showCreatePiggyBankModal, setShowCreatePiggyBankModal] = useState(false);
-  const [showQuickTransferModal, setShowQuickTransferModal] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showSendMoneyModal, setShowSendMoneyModal] = useState(false);
+  const [selectedWallet, setSelectedWallet] = useState<WalletType | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -44,10 +50,15 @@ const Dashboard: React.FC = () => {
     setShowCreatePiggyBankModal(false);
   };
 
-  const handleTransferComplete = () => {
+  const handleSendMoneyComplete = () => {
     loadDashboardData(); // Refresh all data after transfer
-    setShowQuickTransferModal(false);
-    showSuccess('Transfer Completed!', 'Money has been transferred successfully.');
+    setShowSendMoneyModal(false);
+  };
+
+  const handleTransactionComplete = () => {
+    loadDashboardData(); // Refresh wallet balances
+    setShowDepositModal(false);
+    setShowTransferModal(false);
   };
 
   const loadDashboardData = async () => {
@@ -104,20 +115,156 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Welcome Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white"
+        className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-8 text-white"
       >
-        <h2 className="text-2xl font-bold mb-2">
-          Welcome back, {user?.username}! 👋
-        </h2>
-        <p className="text-primary-100">
-          Here's an overview of your financial activity
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">
+              Welcome back, {user?.username}! 👋
+            </h1>
+            <p className="text-primary-100 text-lg">
+              Manage your wallets, send money, and track your savings goals
+            </p>
+          </div>
+          <div className="hidden md:block">
+            <div className="text-right">
+              <p className="text-primary-100 text-sm">Total Balance</p>
+              <p className="text-3xl font-bold">{formatCurrency(totalBalance)}</p>
+            </div>
+          </div>
+        </div>
       </motion.div>
+
+      {/* My Wallets Section */}
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">My Wallets</h2>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowCreateWalletModal(true)}
+            className="btn-primary flex items-center space-x-2"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Create Wallet</span>
+          </motion.button>
+        </div>
+
+        {Array.isArray(wallets) && wallets.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {wallets.map((wallet, index) => (
+              <motion.div
+                key={wallet.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                      <Wallet className="w-6 h-6 text-primary-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{wallet.name}</h3>
+                      <p className="text-sm text-gray-500">
+                        Created {formatDate(wallet.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <p className="text-sm text-gray-600 mb-1">Balance</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {formatCurrency(wallet.balance)}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setSelectedWallet(wallet);
+                      setShowDepositModal(true);
+                    }}
+                    className="btn-success text-sm py-3 flex items-center justify-center space-x-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Add Money</span>
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setSelectedWallet(wallet);
+                      setShowTransferModal(true);
+                    }}
+                    className="btn-primary text-sm py-3 flex items-center justify-center space-x-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Send Money</span>
+                  </motion.button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-300"
+          >
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Wallet className="w-12 h-12 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No wallets yet</h3>
+            <p className="text-gray-500 mb-6">Create your first wallet to start managing your money</p>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowCreateWalletModal(true)}
+              className="btn-primary"
+            >
+              Create Your First Wallet
+            </motion.button>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Send Money Section */}
+      {Array.isArray(wallets) && wallets.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold mb-2">Send Money to Anyone</h3>
+              <p className="text-blue-100">
+                Transfer money to other users instantly by searching their username
+              </p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowSendMoneyModal(true)}
+              className="bg-white text-blue-600 font-semibold py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors duration-200 flex items-center space-x-2"
+            >
+              <Send className="w-5 h-5" />
+              <span>Send Money</span>
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -297,7 +444,7 @@ const Dashboard: React.FC = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setShowQuickTransferModal(true)}
+              onClick={() => setShowSendMoneyModal(true)}
               className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
             >
               <div className="text-center">
@@ -326,10 +473,26 @@ const Dashboard: React.FC = () => {
         />
       )}
 
-      {showQuickTransferModal && (
-        <QuickTransferModal
-          onClose={() => setShowQuickTransferModal(false)}
-          onSuccess={handleTransferComplete}
+      {showDepositModal && selectedWallet && (
+        <DepositModal
+          wallet={selectedWallet}
+          onClose={() => setShowDepositModal(false)}
+          onSuccess={handleTransactionComplete}
+        />
+      )}
+
+      {showTransferModal && selectedWallet && (
+        <TransferModal
+          wallet={selectedWallet}
+          onClose={() => setShowTransferModal(false)}
+          onSuccess={handleTransactionComplete}
+        />
+      )}
+
+      {showSendMoneyModal && (
+        <SendMoneyModal
+          onClose={() => setShowSendMoneyModal(false)}
+          onSuccess={handleSendMoneyComplete}
         />
       )}
     </div>

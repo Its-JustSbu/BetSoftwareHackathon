@@ -106,6 +106,9 @@ export const authAPI = {
 
   updateProfile: (userData: Partial<User>): Promise<AxiosResponse<User>> =>
     api.put('/auth/profile/', userData),
+
+  searchUsers: (query: string): Promise<AxiosResponse<User[]>> =>
+    api.get(`/auth/users/search/?q=${encodeURIComponent(query)}`),
 };
 
 // Wallet API
