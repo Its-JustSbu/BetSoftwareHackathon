@@ -29,24 +29,25 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "solid-space-garbanzo-v969j794qj5h569.github.dev",
-    "https://127.0.0.1:8000"
+    "https://127.0.0.1:8000",
+    "https://127.0.0.1:3000",
 ]
 
 # CSRF settings for API access
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
-    "https://localhost:8000",
+    "https://localhost:3000",
     "http://127.0.0.1:8000",
-    "https://127.0.0.1:8000",
+    "https://127.0.0.1:3000",
     "https://solid-space-garbanzo-v969j794qj5h569.github.dev",
 ]
 
 # CORS settings for API access
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
+    "http://localhost:3000",
     "https://localhost:8000",
-    "http://127.0.0.1:8000",
+    "http://127.0.0.1:3000",
     "https://127.0.0.1:8000",
 ]
 
@@ -103,8 +104,8 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
-    "http://localhost:56713",
-    "http://127.0.0.1:56713",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
     "https://127.0.0.1:8000",
     "https://localhost:8000",
     "https://solid-space-garbanzo-v969j794qj5h569-8000.app.github.dev",
