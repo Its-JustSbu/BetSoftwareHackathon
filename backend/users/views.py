@@ -6,6 +6,7 @@ from django.contrib.auth import login, logout
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from django.db import models
 from drf_spectacular.utils import extend_schema
 from .models import User
 from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer
@@ -94,3 +95,27 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+@extend_schema(
+    responses={200: UserSerializer(many=True)},
+    description="Search users by username or email"
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_users(request):
+    """
+    Search users by username or email
+    """
+    query = request.GET.get('q', '').strip()
+
+    if len(query) < 2:
+        return Response([], status=status.HTTP_200_OK)
+
+    # Search users by username or email, exclude current user
+    users = User.objects.filter(
+        models.Q(username__icontains=query) | models.Q(email__icontains=query)
+    ).exclude(id=request.user.id)[:10]  # Limit to 10 results
+
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
