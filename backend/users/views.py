@@ -45,8 +45,10 @@ def login_view(request):
         user_serializer = UserSerializer(user)
 
         # Add session ID to response
+        print("The request session is ", request.session)
         response_data = user_serializer.data.copy()
         response_data['session_id'] = request.session.session_key
+        print("The session id is ", response_data)
 
         return Response(response_data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
