@@ -29,7 +29,7 @@ const PiggyBankList: React.FC = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   useEffect(() => {
-    loadPiggyBanks();
+    loadPiggyData();
   }, []);
 
   const loadPiggyBanks = async () => {
@@ -63,6 +63,34 @@ const PiggyBankList: React.FC = () => {
 
   const handleContributionComplete = () => {
     loadPiggyBanks(); // Refresh piggy bank amounts
+  };
+
+    const loadPiggyData = async () => {
+    try {
+      setLoading(true);
+      console.log('Loading dashboard data...');
+
+      const [piggyBanksResponse] = await Promise.all([
+        piggyBankAPI.getPiggyBanks(),
+      ]);
+
+      console.log('PiggyBanks response:', piggyBanksResponse.data);
+
+      // Handle both paginated and non-paginated responses
+      const piggyBankData = Array.isArray(piggyBanksResponse.data)
+        ? piggyBanksResponse.data
+        : ((piggyBanksResponse.data as any)?.results || []);
+
+      setPiggyBanks(piggyBankData);
+
+      console.log('Set piggy banks:', piggyBankData);
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      setPiggyBanks([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {

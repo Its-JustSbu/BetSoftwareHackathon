@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, PiggyBank as PiggyBankIcon, Users, TrendingUp, User, Calendar } from 'lucide-react';
-import { piggyBankAPI } from '../../services/api';
-import { PiggyBank, PiggyBankContribution, PiggyBankMember } from '../../types';
-import { formatCurrency, formatDate, formatRelativeTime } from '../../utils';
-import LoadingSpinner from '../LoadingSpinner';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  X,
+  PiggyBank as PiggyBankIcon,
+  Users,
+  TrendingUp,
+  User,
+  Calendar,
+} from "lucide-react";
+import { piggyBankAPI } from "../../services/api";
+import { PiggyBank, PiggyBankContribution, PiggyBankMember } from "../../types";
+import { formatCurrency, formatDate, formatRelativeTime } from "../../utils";
+import LoadingSpinner from "../LoadingSpinner";
 
 interface PiggyBankDetailsModalProps {
   piggyBank: PiggyBank;
@@ -15,13 +22,17 @@ const PiggyBankDetailsModal: React.FC<PiggyBankDetailsModalProps> = ({
   piggyBank,
   onClose,
 }) => {
-  const [contributions, setContributions] = useState<PiggyBankContribution[]>([]);
+  const [contributions, setContributions] = useState<PiggyBankContribution[]>(
+    []
+  );
   const [members, setMembers] = useState<PiggyBankMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'contributions' | 'members'>('contributions');
+  const [activeTab, setActiveTab] = useState<"contributions" | "members">(
+    "contributions"
+  );
 
   useEffect(() => {
-    loadData();
+    loadPiggyData();
   }, [piggyBank.id]);
 
   const loadData = async () => {
@@ -34,7 +45,37 @@ const PiggyBankDetailsModal: React.FC<PiggyBankDetailsModalProps> = ({
       setContributions(contributionsResponse.data);
       setMembers(membersResponse.data);
     } catch (error) {
-      console.error('Error loading piggy bank data:', error);
+      console.error("Error loading piggy bank data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadPiggyData = async () => {
+    try {
+      setLoading(true);
+      console.log("Loading dashboard data...");
+
+      const [piggyBanksResponse, contributionsResponse] = await Promise.all([
+        piggyBankAPI.getMembers(piggyBank.id),
+        piggyBankAPI.getContributions(piggyBank.id),
+      ]);
+
+      console.log("PiggyBanks response:", piggyBanksResponse.data);
+
+      // Handle both paginated and non-paginated responses
+      const contributionsData = Array.isArray(contributionsResponse.data)
+        ? contributionsResponse.data
+        : (contributionsResponse.data as any)?.results || [];
+
+      const piggyBankData = Array.isArray(piggyBanksResponse.data)
+        ? piggyBanksResponse.data
+        : (piggyBanksResponse.data as any)?.results || [];
+
+      setMembers(piggyBankData);
+      setContributions(contributionsData);
+
+      console.log("Set piggy banks:", piggyBankData);
     } finally {
       setLoading(false);
     }
@@ -56,7 +97,9 @@ const PiggyBankDetailsModal: React.FC<PiggyBankDetailsModalProps> = ({
                 <PiggyBankIcon className="w-6 h-6 text-warning-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">{piggyBank.name}</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {piggyBank.name}
+                </h2>
                 <p className="text-sm text-gray-500">Piggy Bank Details</p>
               </div>
             </div>
@@ -75,7 +118,9 @@ const PiggyBankDetailsModal: React.FC<PiggyBankDetailsModalProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-gradient-to-r from-warning-500 to-warning-600 rounded-lg p-6 text-white">
                   <p className="text-warning-100 mb-2">Progress</p>
-                  <p className="text-3xl font-bold mb-2">{piggyBank.progress_percentage.toFixed(1)}%</p>
+                  <p className="text-3xl font-bold mb-2">
+                    {piggyBank.progress_percentage.toFixed(1)}%
+                  </p>
                   <div className="w-full bg-warning-400 rounded-full h-2 mb-2">
                     <div
                       className="h-2 bg-white rounded-full"
@@ -83,27 +128,36 @@ const PiggyBankDetailsModal: React.FC<PiggyBankDetailsModalProps> = ({
                     />
                   </div>
                   <p className="text-warning-100 text-sm">
-                    {formatCurrency(piggyBank.current_amount)} of {formatCurrency(piggyBank.target_amount)}
+                    {formatCurrency(piggyBank.current_amount)} of{" "}
+                    {formatCurrency(piggyBank.target_amount)}
                   </p>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-600">Creator</p>
-                    <p className="font-medium text-gray-900">{piggyBank.creator.username}</p>
+                    <p className="font-medium text-gray-900">
+                      {piggyBank.creator.username}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Created</p>
-                    <p className="font-medium text-gray-900">{formatDate(piggyBank.created_at)}</p>
+                    <p className="font-medium text-gray-900">
+                      {formatDate(piggyBank.created_at)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Status</p>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      piggyBank.is_target_reached 
-                        ? 'bg-success-100 text-success-800' 
-                        : 'bg-warning-100 text-warning-800'
-                    }`}>
-                      {piggyBank.is_target_reached ? 'Goal Reached!' : 'In Progress'}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        piggyBank.is_target_reached
+                          ? "bg-success-100 text-success-800"
+                          : "bg-warning-100 text-warning-800"
+                      }`}
+                    >
+                      {piggyBank.is_target_reached
+                        ? "Goal Reached!"
+                        : "In Progress"}
                     </span>
                   </div>
                 </div>
@@ -121,11 +175,11 @@ const PiggyBankDetailsModal: React.FC<PiggyBankDetailsModalProps> = ({
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6">
                 <button
-                  onClick={() => setActiveTab('contributions')}
+                  onClick={() => setActiveTab("contributions")}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === 'contributions'
-                      ? 'border-warning-500 text-warning-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    activeTab === "contributions"
+                      ? "border-warning-500 text-warning-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -134,11 +188,11 @@ const PiggyBankDetailsModal: React.FC<PiggyBankDetailsModalProps> = ({
                   </div>
                 </button>
                 <button
-                  onClick={() => setActiveTab('members')}
+                  onClick={() => setActiveTab("members")}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === 'members'
-                      ? 'border-warning-500 text-warning-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    activeTab === "members"
+                      ? "border-warning-500 text-warning-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -157,7 +211,7 @@ const PiggyBankDetailsModal: React.FC<PiggyBankDetailsModalProps> = ({
                 </div>
               ) : (
                 <AnimatePresence mode="wait">
-                  {activeTab === 'contributions' ? (
+                  {activeTab === "contributions" ? (
                     <motion.div
                       key="contributions"
                       initial={{ opacity: 0, x: 20 }}
@@ -180,7 +234,9 @@ const PiggyBankDetailsModal: React.FC<PiggyBankDetailsModalProps> = ({
                                     {contribution.contributor.username}
                                   </p>
                                   <p className="text-sm text-gray-500">
-                                    {formatRelativeTime(contribution.created_at)}
+                                    {formatRelativeTime(
+                                      contribution.created_at
+                                    )}
                                   </p>
                                 </div>
                               </div>
@@ -239,12 +295,14 @@ const PiggyBankDetailsModal: React.FC<PiggyBankDetailsModalProps> = ({
                                     Joined {formatDate(member.invited_at)}
                                   </span>
                                 </div>
-                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                                  member.is_active 
-                                    ? 'bg-success-100 text-success-700'
-                                    : 'bg-gray-100 text-gray-700'
-                                }`}>
-                                  {member.is_active ? 'Active' : 'Inactive'}
+                                <span
+                                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+                                    member.is_active
+                                      ? "bg-success-100 text-success-700"
+                                      : "bg-gray-100 text-gray-700"
+                                  }`}
+                                >
+                                  {member.is_active ? "Active" : "Inactive"}
                                 </span>
                               </div>
                             </div>

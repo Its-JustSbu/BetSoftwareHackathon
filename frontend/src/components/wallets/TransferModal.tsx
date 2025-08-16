@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, DollarSign, User } from 'lucide-react';
+import { X, Send, DollarSign, User, IdCard } from 'lucide-react';
 import { walletAPI } from '../../services/api';
 import { Wallet, WalletTransfer } from '../../types';
 import { formatCurrency, validateAmount } from '../../utils';
@@ -142,35 +142,22 @@ const TransferModal: React.FC<TransferModalProps> = ({
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="recipient_wallet_id" className="block text-sm font-medium text-gray-700 mb-2">
-                  Recipient Wallet
+             <div>
+                <label htmlFor="ID" className="block text-sm font-medium text-gray-700 mb-2">
+                  Receipient ID
                 </label>
-                {loadingWallets ? (
-                  <div className="flex items-center justify-center py-4">
-                    <LoadingSpinner size="sm" />
-                  </div>
-                ) : availableWallets.length > 0 ? (
-                  <select
-                    id="recipient_wallet_id"
-                    name="recipient_wallet_id"
+                <div className="relative">
+                  <IdCard className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    id="ID"
+                    name="ID"
                     value={formData.recipient_wallet_id}
                     onChange={handleChange}
-                    className="input-field"
+                    className="input-field pl-10"
                     required
-                  >
-                    <option value="">Select a wallet</option>
-                    {availableWallets.map((w) => (
-                      <option key={w.id} value={w.id}>
-                        {w.name} - {w.owner.username} ({formatCurrency(w.balance)})
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    No other wallets available for transfer
-                  </div>
-                )}
+                  />
+                </div>
               </div>
 
               {selectedRecipient && (

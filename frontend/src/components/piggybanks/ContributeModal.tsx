@@ -27,7 +27,7 @@ const ContributeModal: React.FC<ContributeModalProps> = ({
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadWallets();
+    loadWalletData();
   }, []);
 
   const loadWallets = async () => {
@@ -105,6 +105,47 @@ const ContributeModal: React.FC<ContributeModalProps> = ({
       ...prev,
       amount,
     }));
+  };
+
+    const loadWalletData = async () => {
+    try {
+      setLoading(true);
+      console.log('Loading dashboard data...');
+
+      const [walletsResponse] = await Promise.all([
+        walletAPI.getWallets(),
+      ]);
+
+      console.log('Wallets response:', walletsResponse.data);
+
+      // Handle both paginated and non-paginated responses
+      const walletData = Array.isArray(walletsResponse.data)
+        ? walletsResponse.data
+        : ((walletsResponse.data as any)?.results || []);
+
+      setWallets(walletData);
+
+      console.log('Set wallets:', walletData);
+
+      // Load recent transactions from the first wallet if available
+      if (walletData.length > 0) {
+        try {
+          const transactionsResponse = await walletAPI.getTransactions(walletData[0].id);
+          const transactionData = Array.isArray(transactionsResponse.data)
+            ? transactionsResponse.data.slice(0, 5)
+            : ((transactionsResponse.data as any)?.results?.slice(0, 5) || []);
+          console.log('Set recent transactions:', transactionData);
+        } catch (transactionError) {
+          console.error('Error loading transactions:', transactionError);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      // Set default empty arrays on error
+      setWallets([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

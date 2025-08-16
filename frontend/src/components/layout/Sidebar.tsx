@@ -84,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           x: isOpen ? 0 : '-100%',
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl z-50 lg:relative lg:translate-x-0 lg:shadow-lg lg:border-r lg:border-gray-200"
+        className="absolute left-0 top-0 max-h-screen w-64 bg-white shadow-xl z-50 lg:relative lg:translate-x-0 lg:shadow-lg lg:border-r lg:border-gray-200"
       >
         <div className="flex flex-col h-full">
           {/* Header */}

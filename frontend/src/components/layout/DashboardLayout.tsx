@@ -5,7 +5,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 
 const DashboardLayout: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
 
   const toggleSidebar = () => {
@@ -33,7 +33,7 @@ const DashboardLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className=" max-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
 
@@ -46,7 +46,7 @@ const DashboardLayout: React.FC = () => {
         />
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto bg-gray-50">
+        <div className="flex-1 overflow-auto bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <AnimatePresence mode="wait">
               <motion.div
@@ -60,7 +60,7 @@ const DashboardLayout: React.FC = () => {
               </motion.div>
             </AnimatePresence>
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );
