@@ -4,6 +4,7 @@ import {
   ArrowLeftRight,
   ArrowUpRight,
   ArrowDownRight,
+  Filter,
   Search,
   Calendar,
 } from 'lucide-react';
@@ -27,7 +28,6 @@ const TransferHistory: React.FC = () => {
 
   useEffect(() => {
     filterTransactions();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allTransactions, searchTerm, selectedWallet, selectedType]);
 
   const loadData = async () => {
