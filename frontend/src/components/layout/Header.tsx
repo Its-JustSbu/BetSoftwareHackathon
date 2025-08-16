@@ -19,7 +19,6 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, title }) => {
       title: "Welcome to the Dashboard!",
       message: "You can manage your wallets and piggy banks here.",
       onClose: (id: string) => {
-        
         setNotifications((prev) => prev.filter((n) => n.id !== id));
       },
     },

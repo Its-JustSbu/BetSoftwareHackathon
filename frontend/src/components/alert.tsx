@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
-import { stat } from 'fs';
 
 export type alertStatus = 'success' | 'error' | 'warning' | 'info';
 
