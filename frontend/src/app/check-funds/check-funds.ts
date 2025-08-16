@@ -1,6 +1,7 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
 import { Api } from '../service/api';
 import { Router } from '@angular/router';
+import { Wallet } from '../models/wallet';
 
 @Component({
   selector: 'app-check-funds',
@@ -9,7 +10,7 @@ import { Router } from '@angular/router';
   styleUrl: './check-funds.css'
 })
 export class CheckFunds implements OnInit {
-  wallet: any;
+  wallet: Wallet = new Wallet();
   ngOnInit(): void {
     this.apiService.GetWalletById(this.walletId).subscribe({
       next: (response) => {
@@ -21,7 +22,7 @@ export class CheckFunds implements OnInit {
       }
     })
   }
-  @Input() walletId!: number;
+  @Input() walletId!: string;
 
   apiService = inject(Api);
   router = inject(Router);
