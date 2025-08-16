@@ -77,11 +77,11 @@ const Dashboard: React.FC = () => {
       // Handle both paginated and non-paginated responses
       const walletData = Array.isArray(walletsResponse.data)
         ? walletsResponse.data
-        : (walletsResponse.data?.results || []);
+        : ((walletsResponse.data as any)?.results || []);
 
       const piggyBankData = Array.isArray(piggyBanksResponse.data)
         ? piggyBanksResponse.data
-        : (piggyBanksResponse.data?.results || []);
+        : ((piggyBanksResponse.data as any)?.results || []);
 
       setWallets(walletData);
       setPiggyBanks(piggyBankData);
@@ -95,7 +95,7 @@ const Dashboard: React.FC = () => {
           const transactionsResponse = await walletAPI.getTransactions(walletData[0].id);
           const transactionData = Array.isArray(transactionsResponse.data)
             ? transactionsResponse.data.slice(0, 5)
-            : (transactionsResponse.data?.results?.slice(0, 5) || []);
+            : ((transactionsResponse.data as any)?.results?.slice(0, 5) || []);
           setRecentTransactions(transactionData);
           console.log('Set recent transactions:', transactionData);
         } catch (transactionError) {
