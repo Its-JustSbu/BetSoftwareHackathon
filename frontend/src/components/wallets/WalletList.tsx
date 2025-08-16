@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Wallet as WalletIcon,
   Plus,
@@ -9,16 +9,16 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-} from 'lucide-react';
-import { walletAPI } from '../../services/api';
-import { Wallet } from '../../types';
-import { formatCurrency, formatDate } from '../../utils';
-import { useToast } from '../../contexts/ToastContext';
-import LoadingSpinner from '../LoadingSpinner';
-import CreateWalletModal from './CreateWalletModal';
-import WalletDetailsModal from './WalletDetailsModal';
-import DepositModal from './DepositModal';
-import TransferModal from './TransferModal';
+} from "lucide-react";
+import { walletAPI } from "../../services/api";
+import { Transaction, Wallet } from "../../types";
+import { formatCurrency, formatDate } from "../../utils";
+import { useToast } from "../../contexts/ToastContext";
+import LoadingSpinner from "../LoadingSpinner";
+import CreateWalletModal from "./CreateWalletModal";
+import WalletDetailsModal from "./WalletDetailsModal";
+import DepositModal from "./DepositModal";
+import TransferModal from "./TransferModal";
 
 const WalletList: React.FC = () => {
   const { showSuccess, showError } = useToast();
@@ -30,9 +30,12 @@ const WalletList: React.FC = () => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>(
+    []
+  );
 
   useEffect(() => {
-    loadWallets();
+    loadWalletData();
   }, []);
 
   const loadWallets = async () => {
@@ -41,14 +44,14 @@ const WalletList: React.FC = () => {
       const response = await walletAPI.getWallets();
       setWallets(response.data);
     } catch (error) {
-      console.error('Error loading wallets:', error);
+      console.error("Error loading wallets:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleWalletCreated = (newWallet: Wallet) => {
-    setWallets(prev => [newWallet, ...prev]);
+    setWallets((prev) => [newWallet, ...prev]);
     setShowCreateModal(false);
   };
 
@@ -72,7 +75,59 @@ const WalletList: React.FC = () => {
 
   const handleTransactionComplete = () => {
     loadWallets(); // Refresh wallet balances
-    showSuccess('Transaction Completed!', 'Your transaction has been processed successfully.');
+    showSuccess(
+      "Transaction Completed!",
+      "Your transaction has been processed successfully."
+    );
+  };
+
+  const loadWalletData = async () => {
+    try {
+      setLoading(true);
+      console.log("Loading dashboard data...");
+
+      const [walletsResponse] = await Promise.all([walletAPI.getWallets()]);
+
+      console.log("Wallets response:", walletsResponse.data);
+
+      // Handle both paginated and non-paginated responses
+      const walletData = Array.isArray(walletsResponse.data)
+        ? walletsResponse.data
+        : (walletsResponse.data as any)?.results || [];
+
+      setWallets(walletData);
+
+      console.log("Set wallets:", walletData);
+
+      // Load recent transactions from the first wallet if available
+      if (walletData.length > 0) {
+        try {
+          const transactionsResponse = await walletAPI.getTransactions(
+            walletData[0].id
+          );
+          const transactionData = Array.isArray(transactionsResponse.data)
+            ? transactionsResponse.data.slice(0, 5)
+            : (transactionsResponse.data as any)?.results?.slice(0, 5) || [];
+          setRecentTransactions(transactionData);
+          console.log("Set recent transactions:", transactionData);
+        } catch (transactionError) {
+          console.error("Error loading transactions:", transactionError);
+          setRecentTransactions([]);
+        }
+      } else {
+        setRecentTransactions([]);
+      }
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+      showError(
+        "Failed to Load Data",
+        "Unable to load your wallet information. Please try refreshing the page."
+      );
+      // Set default empty arrays on error
+      setWallets([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -116,12 +171,16 @@ const WalletList: React.FC = () => {
               {/* Dropdown Menu */}
               <div className="absolute top-4 right-4">
                 <button
-                  onClick={() => setActiveDropdown(activeDropdown === wallet.id ? null : wallet.id)}
+                  onClick={() =>
+                    setActiveDropdown(
+                      activeDropdown === wallet.id ? null : wallet.id
+                    )
+                  }
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <MoreVertical className="w-4 h-4 text-gray-500" />
                 </button>
-                
+
                 {activeDropdown === wallet.id && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -169,7 +228,9 @@ const WalletList: React.FC = () => {
                     <WalletIcon className="w-6 h-6 text-primary-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{wallet.name}</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      {wallet.name}
+                    </h3>
                     <p className="text-sm text-gray-500">
                       Created {formatDate(wallet.created_at)}
                     </p>
@@ -222,8 +283,12 @@ const WalletList: React.FC = () => {
           <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <WalletIcon className="w-12 h-12 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No wallets yet</h3>
-          <p className="text-gray-500 mb-6">Create your first wallet to get started</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No wallets yet
+          </h3>
+          <p className="text-gray-500 mb-6">
+            Create your first wallet to get started
+          </p>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
