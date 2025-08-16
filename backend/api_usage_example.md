@@ -58,6 +58,15 @@ curl -X POST http://localhost:8000/api/auth/login/ \
     "password": "securepass123"
   }'
 
+# Response: {
+#   "id": "user-uuid",
+#   "username": "alice",
+#   "email": "alice@example.com",
+#   "session_id": "abc123sessionkey456",
+#   ...
+# }
+# Session cookie saved to alice_cookies.txt (contains sessionid)
+
 # Login as Bob and save session cookie
 curl -X POST http://localhost:8000/api/auth/login/ \
   -H "Content-Type: application/json" \
@@ -66,6 +75,15 @@ curl -X POST http://localhost:8000/api/auth/login/ \
     "username": "bob",
     "password": "securepass123"
   }'
+
+# Response: {
+#   "id": "user-uuid",
+#   "username": "bob",
+#   "email": "bob@example.com",
+#   "session_id": "def789sessionkey012",
+#   ...
+# }
+# Session cookie saved to bob_cookies.txt (contains sessionid)
 ```
 
 ## Wallet Transfer Example
