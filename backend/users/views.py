@@ -3,9 +3,26 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth import login, logout
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from .models import User
 from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer
+
+
+@extend_schema(
+    responses={200: {"description": "CSRF token set in cookies"}},
+    description="Get CSRF token for authentication"
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    """
+    Get CSRF token - this sets the csrftoken cookie
+    """
+    return Response({'detail': 'CSRF cookie set'})
 
 
 @extend_schema(
