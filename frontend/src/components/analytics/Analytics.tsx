@@ -34,8 +34,9 @@ const Analytics: React.FC = () => {
         piggyBankAPI.getPiggyBanks(),
       ]);
 
+      console.log(walletsResponse.data);
       setWallets(walletsResponse.data);
-      setPiggyBanks(piggyBanksResponse.data);
+      setPiggyBanks(piggyBanksResponse.data || []);
 
       // Load transactions from all wallets
       const transactionPromises = walletsResponse.data.map(wallet =>
@@ -53,16 +54,26 @@ const Analytics: React.FC = () => {
   };
 
   // Calculate analytics
-  const totalBalance = wallets.reduce((sum, wallet) => sum + parseFloat(wallet.balance), 0);
-  const totalSavings = piggyBanks.reduce((sum, pb) => sum + parseFloat(pb.current_amount), 0);
+  const totalBalance = Array.isArray(wallets)
+  ? wallets.reduce<number>((sum, wallet) => sum + parseFloat(wallet.balance), 0)
+  : 0;
+  const totalSavings = Array.isArray(piggyBanks) 
+  ? piggyBanks.reduce<number>((sum, pb) => sum + parseFloat(pb.current_amount), 0)
+  : 0;
   
   const deposits = transactions.filter(t => t.transaction_type === 'DEPOSIT');
   const transfers = transactions.filter(t => t.transaction_type === 'TRANSFER_OUT');
   const contributions = transactions.filter(t => t.transaction_type === 'PIGGYBANK_CONTRIBUTION');
-  
-  const totalDeposits = deposits.reduce((sum, t) => sum + parseFloat(t.amount), 0);
-  const totalTransfers = transfers.reduce((sum, t) => sum + parseFloat(t.amount), 0);
-  const totalContributions = contributions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+  const totalDeposits = Array.isArray(wallets) 
+  ? deposits.reduce<number>((sum, t) => sum + parseFloat(t.amount), 0) 
+  : 0;
+  const totalTransfers = Array.isArray(wallets) 
+  ? transfers.reduce<number>((sum, t) => sum + parseFloat(t.amount), 0)
+  : 0;
+  const totalContributions = Array.isArray(wallets) 
+  ? contributions.reduce<number>((sum, t) => sum + parseFloat(t.amount), 0)
+  : 0;
 
   const timeRanges = [
     { value: '7d', label: 'Last 7 days' },
@@ -258,10 +269,10 @@ const Analytics: React.FC = () => {
           </div>
           
           <div className="space-y-4">
-            {wallets.map((wallet, index) => {
+            {/* {wallets && wallets.map((wallet, index) => {
               const percentage = totalBalance > 0 ? (parseFloat(wallet.balance) / totalBalance) * 100 : 0;
               return (
-                <div key={wallet.id}>
+                <div key={index}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-gray-700">{wallet.name}</span>
                     <span className="font-semibold text-gray-900">
@@ -279,7 +290,7 @@ const Analytics: React.FC = () => {
                   <p className="text-sm text-gray-500 mt-1">{percentage.toFixed(1)}%</p>
                 </div>
               );
-            })}
+            })} */}
           </div>
         </motion.div>
       </div>

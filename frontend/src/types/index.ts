@@ -31,6 +31,13 @@ export interface Wallet {
   is_active: boolean;
 }
 
+export interface WalletResult {
+  count: number;
+  next: string;
+  previous: string;
+  results: Wallet[];
+}
+
 export interface WalletCreate {
   name: string;
 }

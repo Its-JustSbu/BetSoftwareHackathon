@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   ArrowLeftRight,
   ArrowUpRight,
@@ -7,49 +7,86 @@ import {
   Filter,
   Search,
   Calendar,
-} from 'lucide-react';
-import { walletAPI } from '../../services/api';
-import { Wallet, Transaction } from '../../types';
-import { formatCurrency, formatDate, formatTransactionType, getTransactionTypeColor } from '../../utils';
-import LoadingSpinner from '../LoadingSpinner';
+} from "lucide-react";
+import { walletAPI } from "../../services/api";
+import { Wallet, Transaction } from "../../types";
+import {
+  formatCurrency,
+  formatDate,
+  formatTransactionType,
+  getTransactionTypeColor,
+} from "../../utils";
+import LoadingSpinner from "../LoadingSpinner";
 
 const TransferHistory: React.FC = () => {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    Transaction[]
+  >([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedWallet, setSelectedWallet] = useState<string>('all');
-  const [selectedType, setSelectedType] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedWallet, setSelectedWallet] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
 
   useEffect(() => {
-    loadData();
+    loadTransactionsData()
   }, []);
 
   useEffect(() => {
     filterTransactions();
   }, [allTransactions, searchTerm, selectedWallet, selectedType]);
 
-  const loadData = async () => {
+  const loadTransactionsData = async () => {
     try {
       setLoading(true);
-      const walletsResponse = await walletAPI.getWallets();
-      setWallets(walletsResponse.data);
+      console.log("Loading Transactions data...");
 
-      // Load transactions from all wallets
-      const transactionPromises = walletsResponse.data.map(wallet =>
-        walletAPI.getTransactions(wallet.id)
-      );
-      
-      const transactionResponses = await Promise.all(transactionPromises);
-      const allTxns = transactionResponses.flatMap(response => response.data);
-      
-      // Sort by date (newest first)
-      allTxns.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      
-      setAllTransactions(allTxns);
+      const [walletsResponse] = await Promise.all([walletAPI.getWallets()]);
+
+      console.log("Wallets response:", walletsResponse.data);
+
+      // Handle both paginated and non-paginated responses
+      const walletData = Array.isArray(walletsResponse.data)
+        ? walletsResponse.data
+        : (walletsResponse.data as any)?.results || [];
+
+      setWallets(walletData);
+
+      console.log("Set wallets:", walletData);
+
+      // Load recent transactions from the first wallet if available
+      if (walletData.length > 0) {
+        try {
+          const walletsResponse = await walletAPI.getTransactions(
+            walletData[0].id
+          );
+
+          const transactionPromises = walletsResponse.data.map((wallet) =>
+            walletAPI.getTransactions(wallet.id)
+          );
+
+          const transactionResponses = await Promise.all(transactionPromises);
+          const allTxns = transactionResponses.flatMap(
+            (response) => response.data
+          );
+
+          // Sort by date (newest first)
+          allTxns.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          );
+
+          setAllTransactions(allTxns);
+        } catch (transactionError) {
+          console.error("Error loading transactions:", transactionError);
+        }
+      }
     } catch (error) {
-      console.error('Error loading transfer history:', error);
+      console.error("Error loading dashboard data:", error);
+      // Set default empty arrays on error
+      setWallets([]);
     } finally {
       setLoading(false);
     }
@@ -59,20 +96,25 @@ const TransferHistory: React.FC = () => {
     let filtered = allTransactions;
 
     // Filter by wallet
-    if (selectedWallet !== 'all') {
-      filtered = filtered.filter(txn => txn.wallet.id === selectedWallet);
+    if (selectedWallet !== "all") {
+      filtered = filtered.filter((txn) => txn.wallet.id === selectedWallet);
     }
 
     // Filter by transaction type
-    if (selectedType !== 'all') {
-      filtered = filtered.filter(txn => txn.transaction_type === selectedType);
+    if (selectedType !== "all") {
+      filtered = filtered.filter(
+        (txn) => txn.transaction_type === selectedType
+      );
     }
 
     // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(txn =>
-        txn.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        formatTransactionType(txn.transaction_type).toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (txn) =>
+          txn.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          formatTransactionType(txn.transaction_type)
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
       );
     }
 
@@ -80,11 +122,11 @@ const TransferHistory: React.FC = () => {
   };
 
   const transferTypes = [
-    { value: 'all', label: 'All Types' },
-    { value: 'TRANSFER_IN', label: 'Transfers In' },
-    { value: 'TRANSFER_OUT', label: 'Transfers Out' },
-    { value: 'DEPOSIT', label: 'Deposits' },
-    { value: 'PIGGYBANK_CONTRIBUTION', label: 'Piggy Bank Contributions' },
+    { value: "all", label: "All Types" },
+    { value: "TRANSFER_IN", label: "Transfers In" },
+    { value: "TRANSFER_OUT", label: "Transfers Out" },
+    { value: "DEPOSIT", label: "Deposits" },
+    { value: "PIGGYBANK_CONTRIBUTION", label: "Piggy Bank Contributions" },
   ];
 
   if (loading) {
@@ -127,7 +169,7 @@ const TransferHistory: React.FC = () => {
             className="input-field"
           >
             <option value="all">All Wallets</option>
-            {wallets.map(wallet => (
+            {wallets.map((wallet) => (
               <option key={wallet.id} value={wallet.id}>
                 {wallet.name}
               </option>
@@ -140,7 +182,7 @@ const TransferHistory: React.FC = () => {
             onChange={(e) => setSelectedType(e.target.value)}
             className="input-field"
           >
-            {transferTypes.map(type => (
+            {transferTypes.map((type) => (
               <option key={type.value} value={type.value}>
                 {type.label}
               </option>
@@ -158,7 +200,7 @@ const TransferHistory: React.FC = () => {
                 Transactions ({filteredTransactions.length})
               </h3>
             </div>
-            
+
             <div className="space-y-3">
               {filteredTransactions.map((transaction, index) => (
                 <motion.div
@@ -169,18 +211,22 @@ const TransferHistory: React.FC = () => {
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      transaction.transaction_type === 'DEPOSIT' || transaction.transaction_type === 'TRANSFER_IN'
-                        ? 'bg-success-100'
-                        : 'bg-danger-100'
-                    }`}>
-                      {transaction.transaction_type === 'DEPOSIT' || transaction.transaction_type === 'TRANSFER_IN' ? (
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        transaction.transaction_type === "DEPOSIT" ||
+                        transaction.transaction_type === "TRANSFER_IN"
+                          ? "bg-success-100"
+                          : "bg-danger-100"
+                      }`}
+                    >
+                      {transaction.transaction_type === "DEPOSIT" ||
+                      transaction.transaction_type === "TRANSFER_IN" ? (
                         <ArrowDownRight className="w-6 h-6 text-success-600" />
                       ) : (
                         <ArrowUpRight className="w-6 h-6 text-danger-600" />
                       )}
                     </div>
-                    
+
                     <div>
                       <p className="font-medium text-gray-900">
                         {formatTransactionType(transaction.transaction_type)}
@@ -201,19 +247,28 @@ const TransferHistory: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="text-right">
-                    <p className={`text-lg font-semibold ${getTransactionTypeColor(transaction.transaction_type)}`}>
-                      {transaction.transaction_type === 'DEPOSIT' || transaction.transaction_type === 'TRANSFER_IN' ? '+' : '-'}
+                    <p
+                      className={`text-lg font-semibold ${getTransactionTypeColor(
+                        transaction.transaction_type
+                      )}`}
+                    >
+                      {transaction.transaction_type === "DEPOSIT" ||
+                      transaction.transaction_type === "TRANSFER_IN"
+                        ? "+"
+                        : "-"}
                       {formatCurrency(transaction.amount)}
                     </p>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      transaction.status === 'COMPLETED' 
-                        ? 'bg-success-100 text-success-700'
-                        : transaction.status === 'PENDING'
-                        ? 'bg-warning-100 text-warning-700'
-                        : 'bg-danger-100 text-danger-700'
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        transaction.status === "COMPLETED"
+                          ? "bg-success-100 text-success-700"
+                          : transaction.status === "PENDING"
+                          ? "bg-warning-100 text-warning-700"
+                          : "bg-danger-100 text-danger-700"
+                      }`}
+                    >
                       {transaction.status}
                     </span>
                   </div>
@@ -226,12 +281,13 @@ const TransferHistory: React.FC = () => {
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <ArrowLeftRight className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No transactions found
+            </h3>
             <p className="text-gray-500">
-              {searchTerm || selectedWallet !== 'all' || selectedType !== 'all'
-                ? 'Try adjusting your filters'
-                : 'Start making transactions to see them here'
-              }
+              {searchTerm || selectedWallet !== "all" || selectedType !== "all"
+                ? "Try adjusting your filters"
+                : "Start making transactions to see them here"}
             </p>
           </div>
         )}

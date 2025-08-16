@@ -44,11 +44,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       href: '/transfers',
       icon: ArrowLeftRight,
     },
-    {
-      name: 'Analytics',
-      href: '/analytics',
-      icon: BarChart3,
-    },
+    // {
+    //   name: 'Analytics',
+    //   href: '/analytics',
+    //   icon: BarChart3,
+    // },
     {
       name: 'Settings',
       href: '/settings',
