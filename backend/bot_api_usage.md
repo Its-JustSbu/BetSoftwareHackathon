@@ -1,6 +1,6 @@
-# Bot API Documentation
+# Bot API Documentation with KYC Integration
 
-This document describes the Bot API endpoints that allow external bots to query user information from the database.
+This document describes the Bot API endpoints that allow external bots to query user information, wallet data, and KYC verification status from the database.
 
 ## ✅ Testing Status
 
@@ -8,11 +8,21 @@ This document describes the Bot API endpoints that allow external bots to query 
 
 The following test results confirm the API is working correctly:
 - ✅ API Status Check: Returns proper authentication status
-- ✅ User Search: Successfully finds and returns user data
-- ✅ System Statistics: Returns accurate system-wide statistics
-- ✅ User Summary: Returns paginated list of all users
+- ✅ User Search: Successfully finds and returns user data with KYC info
+- ✅ KYC Status Check: Returns comprehensive KYC verification details
+- ✅ System Statistics: Returns accurate system-wide statistics with KYC metrics
+- ✅ Transaction Validation: Validates transactions against KYC limits
+- ✅ User Summary: Returns paginated list of all users with KYC data
 
-Last tested: August 16, 2025
+Last updated: August 16, 2025
+
+## 🆕 New KYC Features
+
+- **KYC Status Checking**: Get detailed KYC verification status for users
+- **Transaction Validation**: Check if users can perform transactions based on KYC level
+- **KYC-Based Filtering**: Search wallets and users by KYC verification level
+- **Enhanced Statistics**: System stats now include KYC verification metrics
+- **Transaction Limits**: View user transaction limits based on KYC level
 
 ## Authentication
 
@@ -104,7 +114,21 @@ Get detailed information about a specific user.
     "last_name": "",
     "phone_number": null,
     "created_at": "2025-08-15T22:26:10.059931Z",
-    "is_active": true
+    "is_active": true,
+    "has_kyc_profile": false,
+    "is_kyc_verified": false,
+    "kyc_status": null,
+    "kyc_verification_level": null,
+    "kyc_full_name": "admin",
+    "transaction_limit": 0,
+    "kyc_summary": {
+        "has_profile": false,
+        "status": null,
+        "level": null,
+        "is_verified": false,
+        "transaction_limit": 0,
+        "next_step": "Create KYC profile"
+    }
 }
 ```
 
@@ -130,7 +154,18 @@ Get all wallets belonging to a specific user.
             "balance": "1000.50",
             "created_at": "2025-01-01T00:00:00Z",
             "updated_at": "2025-01-02T00:00:00Z",
-            "is_active": true
+            "is_active": true,
+            "owner_kyc_status": "APPROVED",
+            "owner_verification_level": "ENHANCED",
+            "owner_transaction_limit": 50000,
+            "can_transact_1k": {
+                "allowed": true,
+                "reason": "Transaction allowed"
+            },
+            "can_transact_10k": {
+                "allowed": true,
+                "reason": "Transaction allowed"
+            }
         }
     ]
 }
@@ -140,7 +175,7 @@ Get all wallets belonging to a specific user.
 
 **POST** `/bot-api/wallets/search/`
 
-Search for wallets by various criteria.
+Search for wallets by various criteria including KYC filters.
 
 **Request Body:**
 ```json
@@ -148,7 +183,9 @@ Search for wallets by various criteria.
     "owner_username": "optional_username",
     "owner_email": "optional_email",
     "wallet_id": "optional_uuid",
-    "is_active": true
+    "is_active": true,
+    "kyc_verified_only": false,
+    "min_kyc_level": "ENHANCED"
 }
 ```
 
@@ -258,19 +295,58 @@ Get system-wide statistics.
 {
     "message": "System statistics retrieved successfully",
     "stats": {
-        "total_users": 8,
-        "active_users": 8,
-        "total_wallets": 10,
-        "active_wallets": 10,
-        "total_transactions": 12,
-        "completed_transactions": 12,
-        "total_piggybanks": 1,
-        "active_piggybanks": 1
+        "users": {
+            "total_users": 150,
+            "active_users": 145,
+            "users_with_kyc_profile": 120,
+            "kyc_verified_users": 100,
+            "kyc_pending": 15,
+            "kyc_under_review": 5
+        },
+        "kyc_levels": {
+            "basic": 60,
+            "enhanced": 30,
+            "premium": 10
+        },
+        "wallets": {
+            "total_wallets": 200,
+            "active_wallets": 195
+        },
+        "transactions": {
+            "total_transactions": 5000,
+            "completed_transactions": 4950
+        },
+        "piggybanks": {
+            "total_piggybanks": 25,
+            "active_piggybanks": 20
+        }
     }
 }
 ```
 
 **Status:** ✅ Working
+
+## 🆕 New KYC Endpoints
+
+The following endpoints provide access to KYC (Know Your Customer) verification data:
+
+### 13. Get User KYC Status
+**GET** `/bot-api/users/{user_id}/kyc-status/` - Get comprehensive KYC status for a user
+
+### 14. Get Users by KYC Level  
+**GET** `/bot-api/users/kyc-level/{level}/` - Filter users by verification level (basic/enhanced/premium/unverified)
+
+### 15. Validate Transaction
+**POST** `/bot-api/validate-transaction/` - Check if user can perform transaction based on KYC limits
+
+### 16. Get KYC Profiles
+**GET** `/bot-api/kyc/profiles/` - Get KYC profiles with filtering options
+
+### KYC Transaction Limits
+- **No KYC**: R0 (no transactions allowed)
+- **Basic KYC**: R10,000 per day
+- **Enhanced KYC**: R50,000 per day  
+- **Premium KYC**: R500,000 per day
 
 ## Error Responses
 
@@ -320,21 +396,57 @@ if response.status_code == 200:
     users = data.get("users", [])
     for user in users:
         print(f"Found user: {user['username']} - {user['email']}")
+        print(f"KYC Status: {user['kyc_status']} - Level: {user['kyc_verification_level']}")
+        print(f"Transaction Limit: R{user['transaction_limit']}")
 else:
     print(f"Error: {response.status_code} - {response.text}")
 
-# Get user wallets
-user_id = "7ade19ee-f338-47db-8d99-54388d9fa3e7"  # Example user ID from test
+# Get user KYC status
+user_id = "7ade19ee-f338-47db-8d99-54388d9fa3e7"
 response = requests.get(
-    f"{BASE_URL}/users/{user_id}/wallets/",
+    f"{BASE_URL}/users/{user_id}/kyc-status/",
+    headers=headers
+)
+
+if response.status_code == 200:
+    kyc_data = response.json()
+    print(f"User {kyc_data['username']} KYC Summary:")
+    print(f"- Verified: {kyc_data['is_kyc_verified']}")
+    print(f"- Level: {kyc_data['kyc_verification_level']}")
+    print(f"- Limit: R{kyc_data['transaction_limit']}")
+    print(f"- Next Step: {kyc_data['kyc_summary']['next_step']}")
+
+# Validate a transaction
+validation_data = {
+    "user_id": user_id,
+    "amount": "15000.00",
+    "transaction_type": "TRANSFER_OUT"
+}
+
+response = requests.post(
+    f"{BASE_URL}/validate-transaction/",
+    json=validation_data,
+    headers=headers
+)
+
+if response.status_code == 200:
+    result = response.json()
+    validation = result['validation']
+    print(f"Can transact R{result['amount']}: {validation['can_transact']}")
+    if not validation['can_transact']:
+        print(f"Reason: {validation['reason']}")
+
+# Get users by KYC level
+response = requests.get(
+    f"{BASE_URL}/users/kyc-level/enhanced/?limit=10",
     headers=headers
 )
 
 if response.status_code == 200:
     data = response.json()
-    print(f"User {data['user']} has {data['wallet_count']} wallets")
-    for wallet in data['wallets']:
-        print(f"- {wallet['name']}: R{wallet['balance']}")
+    print(f"Found {data['user_count']} users with Enhanced KYC")
+    for user in data['users']:
+        print(f"- {user['username']}: R{user['transaction_limit']} limit")
 ```
 
 ### cURL Example
